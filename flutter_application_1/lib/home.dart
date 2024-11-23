@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           TextFormField(
             decoration: InputDecoration(
-              labelText: 'Ingrese su correo electrónico',
+              labelText: 'Escriba un titulo',
               filled: true,
               fillColor: Colors.white,
               border: OutlineInputBorder(
