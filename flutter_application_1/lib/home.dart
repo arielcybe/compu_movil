@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
@@ -107,7 +106,7 @@ class _HomePageState extends State<HomePage> {
           },
         ),
         flexibleSpace: AnimatedContainer(
-          duration: const Duration(milliseconds: 500),
+          duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [mainColor1, mainColor2],
@@ -142,7 +141,7 @@ class _HomePageState extends State<HomePage> {
               child: AnimatedContainer(
                 width: MediaQuery.of(context).size.width * 0.9,
                 height: 50,
-                duration: const Duration(milliseconds: 500),
+                duration: const Duration(milliseconds: 200),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [mainColor1, mainColor2],
@@ -155,7 +154,7 @@ class _HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: DropdownButton<String>(
                   value: ticketValue,
-                  icon: const Icon(Icons.arrow_downward, color: Colors.white),
+                  icon: const Icon(Icons.expand_more , color: Colors.white),
                   iconSize: 24,
                   elevation: 16,
                   style: const TextStyle(color: Colors.white),
@@ -168,7 +167,7 @@ class _HomePageState extends State<HomePage> {
                       showForm = true;
                       switch (ticketValue) {
                         case 'Solicitar informacion':
-                          changeColors(const Color(0xFF00f56d), const Color(0xFF00c4d5));
+                          changeColors(const Color(0xFF00c4d5), const Color(0xFF00f56d));
                           break;
                         case 'Realizar sugerencia':
                           changeColors(const Color(0xFFcd00d8), const Color(0xFFf9ff00));
