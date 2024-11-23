@@ -96,7 +96,6 @@ class MyApp extends StatelessWidget {
       ),
       // home: const MyHomePage(title: 'Flutter API Demo'),
       home: HomePage(),
-      // home: Dropdown(),
     );
   }
 }
