@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'home.dart';
 
 const String baseUrl = 'https://api.sebastian.cl/oirs-utem';
-const String accessToken = 'eyJhbGciOiJSUzI1NiIsImtpZCI6ImQ5NzQwYTcwYjA5NzJkY2NmNzVmYTg4YmM1MjliZDE2YTMwNTczYmQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIyMTIyNjc2ODY2MDQtMGo0a3M5c25pa2plMHNzdGpqbW10Mm1tZTJvZHYyZnUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIyMTIyNjc2ODY2MDQtMGo0a3M5c25pa2plMHNzdGpqbW10Mm1tZTJvZHYyZnUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTY5NzU3NDY5MzQ1NzY0MzUzNjYiLCJoZCI6InV0ZW0uY2wiLCJlbWFpbCI6ImNwZWRyZXJvc0B1dGVtLmNsIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImF0X2hhc2giOiJaMXdYQ1RKdVhhMVRYaFh0R3pHQUlnIiwibmFtZSI6IkNBTUlMTyBFU1RFQkFOIFBFRFJFUk9TIEpBUkEiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSUNwU0o0UWk0WXBhTkctSWJYMWhzam95OEhsdmZZblJ2b3FCeFpxZlQzWHZkLWZqRT1zOTYtYyIsImdpdmVuX25hbWUiOiJDQU1JTE8gRVNURUJBTiIsImZhbWlseV9uYW1lIjoiUEVEUkVST1MgSkFSQSIsImlhdCI6MTczMjIzOTY5MSwiZXhwIjoxNzMyMjQzMjkxfQ.mh1Se0dgBopgeEs4LWJv5MdVPVPsLN6V3BTv7iDS0rgo8RZzxn37KVrZAe8083Q_VGRsYaQC0oacTAPOZcuHSWePa23q7zoWW2_56dQY5hu3S84UrQC1TWEZW4KlBW4RvFX8iTUMObzIXjcsI8dkDOZyVcoC6zTDMUookjECIs2B56z9pG9ae6MaIbOfGTuAUIS2KFD7X99kZxCMpyjBCylz8EroazkF9EPyVCCOLLxbyvfLY9y8qJzYzlHVC1IGDM_T6lDui7i1-uRO8x4x2pV3qrvg8JoAO-12dGzuw7iYh_TGZsOPv50l86HvQ5rGi-m6jG9LGVnRcvBbhJMBOg';
+const String accessToken = 'eyJhbGciOiJSUzI1NiIsImtpZCI6ImQ5NzQwYTcwYjA5NzJkY2NmNzVmYTg4YmM1MjliZDE2YTMwNTczYmQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIyMTIyNjc2ODY2MDQtMGo0a3M5c25pa2plMHNzdGpqbW10Mm1tZTJvZHYyZnUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIyMTIyNjc2ODY2MDQtMGo0a3M5c25pa2plMHNzdGpqbW10Mm1tZTJvZHYyZnUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTY5NzU3NDY5MzQ1NzY0MzUzNjYiLCJoZCI6InV0ZW0uY2wiLCJlbWFpbCI6ImNwZWRyZXJvc0B1dGVtLmNsIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImF0X2hhc2giOiJfMENPQ1BaQTR4QWlHQUJFTlllcS13IiwibmFtZSI6IkNBTUlMTyBFU1RFQkFOIFBFRFJFUk9TIEpBUkEiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSUNwU0o0UWk0WXBhTkctSWJYMWhzam95OEhsdmZZblJ2b3FCeFpxZlQzWHZkLWZqRT1zOTYtYyIsImdpdmVuX25hbWUiOiJDQU1JTE8gRVNURUJBTiIsImZhbWlseV9uYW1lIjoiUEVEUkVST1MgSkFSQSIsImlhdCI6MTczMjI1MTY2MywiZXhwIjoxNzMyMjU1MjYzfQ.V_dIxPRYi-SAKRgv9wSztgUKnivbUEPrYJkyThz0cIf6c9i-XNvoTtyRoCxoD6O_wFoGTdtd9bMroZGYblDvOFg1VAJadd1j4OsuCnDDJyhlVRM6KTdsOi3IZITFCSMedb-3qeNDo9jtevsbI-k_OPauMf1L5p8PiHf0rWLpBVYMfFEU9gO4pCtrJq_DHVTXGSTe_w7scQwGu3L_3Z51gdbIAR9FchkSHru44gQvg_8EyomZNEVgX7sx0fl-4W0v8LsTS7K34Bypkdm8HHl2rF4KelQX2bKE1P_IDjtH5tmyJNnHzQdr6_k3ugTZTV_g00lqkejjriH_26sKZKZtvA';
 
 final Dio dio = Dio(
   BaseOptions(
     baseUrl: baseUrl,
     headers: {
       'Authorization': 'Bearer $accessToken',
-      'Content-Type': 'application/json',
     },
   ),
 );
@@ -43,13 +43,16 @@ class _MyHomePageState extends State<MyHomePage> {
     final response = await fetchData();
     if (response != null) {
       setState(() {
-        _data = jsonDecode(response.data); // Decode JSON data
+        // Si response.data es una lista o un mapa, conviértelo a String
+        _data = response.data is String
+            ? response.data
+            : jsonEncode(response.data); // Convierte objetos a JSON String
       });
     } else {
       print('Error fetching data');
-      // Show a snackbar or other UI element to inform the user of the error
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +64,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text('Data from API:'),
+            const Text('Data from API:'),
             Text(_data), // Display the fetched data
           ],
         ),
@@ -90,7 +93,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter API Demo'),
+      // home: const MyHomePage(title: 'Flutter API Demo'),
+      home: HomePage(),
     );
   }
 }
