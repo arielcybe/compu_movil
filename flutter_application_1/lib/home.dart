@@ -7,39 +7,83 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String dropdownValue = 'Seleccione una opcion';
+  String ticketValue = 'Seleccione una opcion';
+  String carreraValue = 'Seleccione una carrera';
   bool showForm = false;
   Color mainColor1 = Color(0xFF6400ab);
   Color mainColor2 = Color(0xFFbbd80d);
 
+  void changeColors(newColor1,newColor2) {
+    setState(() {
+      mainColor1 = mainColor1 == mainColor1 ? newColor1 : newColor1;
+      mainColor1 = newColor1;
+      mainColor2 = mainColor2 == mainColor2 ? newColor2 : newColor2;
+      mainColor2 = newColor2;
+    });
+  }
+
   Widget buildForm() {
     return Container(
       padding: const EdgeInsets.all(20.0),
+      width: MediaQuery.of(context).size.width * 0.9,
+      decoration: BoxDecoration(
+        color: const Color(0xFFd3d3d3),
+        borderRadius: BorderRadius.circular(15),
+      ),
       child: Column(
         children: [
-          // Add form fields for "Solicitar informacion" here
           TextFormField(
-            decoration: const InputDecoration(
-              labelText: 'Ingrese su nombre',
+            decoration: InputDecoration(
+              labelText: 'Ingrese su correo electrónico',
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             ),
           ),
+          const SizedBox(height: 10), // Add space between text fields
           TextFormField(
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Ingrese su correo electrónico',
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             ),
+          ),
+          const SizedBox(height: 10),
+          DropdownButton<String>(
+            value: carreraValue,
+            icon: const Icon(Icons.arrow_downward, color: Colors.white),
+            iconSize: 24,
+            elevation: 16,
+            style: const TextStyle(color: Colors.white),
+            dropdownColor: Colors.grey,
+            underline: Container(),
+            onChanged: (String? newValue) {
+              setState(() {
+                carreraValue = newValue!;
+              });
+            },
+            items: <String>['Seleccione una carrera', 'Carrera 1', 'Carrera 2', 'Carrera 3']
+                .map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
           ),
           TextFormField(
             decoration: const InputDecoration(
               labelText: 'Escriba su solicitud de información',
               hintMaxLines: 5,
             ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Handle form submission for "Solicitar informacion"
-              print('Solicitud de información enviada!');
-            },
-            child: const Text('Enviar solicitud'),
           ),
         ],
       ),
@@ -62,7 +106,8 @@ class _HomePageState extends State<HomePage> {
             );
           },
         ),
-        flexibleSpace: Container(
+        flexibleSpace: AnimatedContainer(
+          duration: const Duration(milliseconds: 500),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [mainColor1, mainColor2],
@@ -71,6 +116,8 @@ class _HomePageState extends State<HomePage> {
               end: const Alignment(3, 1),
             ),
           ),
+          width: 200,
+          height: 200,
         ),
       ),
       drawer: Drawer(
@@ -82,9 +129,20 @@ class _HomePageState extends State<HomePage> {
       body: Center(
         child: Column(
           children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 20.0, left: 20.0), // Add padding here
+              child: Text(
+                "Buenas, bienvenido ¿que deseas hacer?",
+                style: TextStyle(fontSize: 15.0, color: Colors.black),
+                textAlign: TextAlign.start, // Alineación a la izquierda
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.only(top: 20.0), // Add padding here
-              child: Container(
+              child: AnimatedContainer(
+                width: MediaQuery.of(context).size.width * 0.9,
+                height: 50,
+                duration: const Duration(milliseconds: 500),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [mainColor1, mainColor2],
@@ -96,35 +154,31 @@ class _HomePageState extends State<HomePage> {
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: DropdownButton<String>(
-                  value: dropdownValue,
-                  icon: const Icon(Icons.arrow_downward),
+                  value: ticketValue,
+                  icon: const Icon(Icons.arrow_downward, color: Colors.white),
                   iconSize: 24,
                   elevation: 16,
                   style: const TextStyle(color: Colors.white),
-                  dropdownColor: Colors.deepPurpleAccent,
+                  dropdownColor: Colors.grey,
                   underline: Container(),
                   onChanged: (String? newValue) {
                     // Handle the selected value here
                     setState(() {
-                      dropdownValue = newValue!;
+                      ticketValue = newValue!;
                       showForm = true;
-                      switch (dropdownValue) {
+                      switch (ticketValue) {
                         case 'Solicitar informacion':
-                          mainColor1 = const Color(0xFF00f56d);
-                          mainColor2 = const Color(0xFF00c4d5);
+                          changeColors(const Color(0xFF00f56d), const Color(0xFF00c4d5));
                           break;
                         case 'Realizar sugerencia':
-                          mainColor1 = const Color(0xFFcd00d8);
-                          mainColor2 = const Color(0xFFf9ff00);
+                          changeColors(const Color(0xFFcd00d8), const Color(0xFFf9ff00));
                           break;
                         case 'Enviar reclamo':
-                          mainColor1 = const Color(0xFFb9d800);
-                          mainColor2 = const Color(0xFFff0000);
+                          changeColors(const Color(0xFFff0000), const Color(0xFFb9d800));
                           break;
                         default:
                           showForm = false;
-                          mainColor1 = const Color(0xFF6400ab);
-                          mainColor2 = const Color(0xFFbbd80d);
+                          changeColors(const Color(0xFF6400ab), const Color(0xFFbbd80d));
                       }
                     });
                   },
@@ -138,10 +192,15 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            if (showForm) buildForm(),
+            if (showForm)
+              Padding(
+                padding: const EdgeInsets.only(top: 20.0), // Adjust the padding as needed
+                child: buildForm(),
+              )
           ],
         ),
       ),
     );
   }
 }
+
