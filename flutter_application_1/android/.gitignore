@@ -4,6 +4,8 @@ gradle-wrapper.jar
 /gradlew
 /gradlew.bat
 /local.properties
+
+# Flutter generated files
 GeneratedPluginRegistrant.java
 
 # Remember to never publicly share your keystore.
@@ -11,3 +13,6 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# IDE-specific configurations
+.idea/
