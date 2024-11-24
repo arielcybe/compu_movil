@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_application_1/tickets.dart';
 
 const String baseUrl = 'https://api.sebastian.cl/oirs-utem';
 const String accessToken =
@@ -372,7 +373,11 @@ class _HomePageState extends State<HomePage> {
         ListTile(
           leading: const Icon(Icons.history),
           title: const Text('Mis tickets'),
-          onTap: () {},
+          onTap: () {
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => const TicketScreen(),
+            ));
+          },
         ),
         const SizedBox(height: 400),
         const Divider(
