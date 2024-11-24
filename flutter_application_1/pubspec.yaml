@@ -37,6 +37,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   dio: ^5.7.0
   logger: ^2.5.0
+  google_sign_in: ^6.2.2
   fluent_ui: ^4.9.2
 
 dev_dependencies:
@@ -91,3 +92,20 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+funding:
+  -
+dependency_overrides:
+executables:
+topics:
+  -
+documentation:
+ignored_advisories:
+  -
+issue_tracker:
+repository:
+false_secrets:
+  -
+screenshots:
+  -
+homepage:
+platforms:
