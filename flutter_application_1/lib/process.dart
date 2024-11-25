@@ -40,3 +40,4 @@ Future<List<Category>?> fetchCategories() async {
     return null;
   }
 }
+

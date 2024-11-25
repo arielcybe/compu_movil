@@ -6,6 +6,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
+
 class _HomePageState extends State<HomePage> {
   String requirementDD = 'Seleccione una opcion';
   String categoryDD = 'Categoria';
@@ -379,6 +380,57 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
+// class MyHomePage extends StatefulWidget {
+//   const MyHomePage({super.key, required this.title});
+//
+//   final String title;
+//
+//   @override
+//   State<MyHomePage> createState() => _MyHomePageState();
+// }
+//
+// class _MyHomePageState extends State<MyHomePage> {
+//   String _data = ''; // Variable to store the fetched data
+//
+//   Future<void> _makeRequest() async {
+//     final response = await fetchData();
+//     if (response != null) {
+//       setState(() {
+//         // Si response.data es una lista o un mapa, conviértelo a String
+//         _data = response.data is String
+//             ? response.data
+//             : jsonEncode(response.data); // Convierte objetos a JSON String
+//       });
+//     } else {
+//       print('Error fetching data');
+//     }
+//   }
+//
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text(widget.title),
+//       ),
+//       body: Center(
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: <Widget>[
+//             const Text('Data from API:'),
+//             Text(_data), // Display the fetched data
+//           ],
+//         ),
+//       ),
+//       floatingActionButton: FloatingActionButton(
+//         onPressed: _makeRequest,
+//         tooltip: 'Fetch Data',
+//         child: const Icon(Icons.download),
+//       ),
+//     );
+//   }
+// }
 
 void main() {
   runApp(const MyApp());
