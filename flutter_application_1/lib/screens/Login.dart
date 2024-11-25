@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import '../services/google_services.dart'; // Importa el servicio de Google
 import 'home.dart'; // Asegúrate de importar HomePage
+import 'error_screen.dart'; // Importa ErrorScreen
 
 class LoginScreen extends StatelessWidget {
   static final Logger _logger = Logger();
@@ -18,9 +19,7 @@ class LoginScreen extends StatelessWidget {
       );
     } else {
       _logger.e('Falló el inicio de sesión');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al iniciar sesión')),
-      );
+      ErrorScreen.showErrorDialog(context, 'No se pudo iniciar sesión. Verifica tus credenciales.');
     }
   }
 
