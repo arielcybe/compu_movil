@@ -1,42 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
-
-const String baseUrl = 'https://api.sebastian.cl/oirs-utem';
-const String accessToken = 'eyJhbGciOiJSUzI1NiIsImtpZCI6ImQ5NzQwYTcwYjA5NzJkY2NmNzVmYTg4YmM1MjliZDE2YTMwNTczYmQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIyMTIyNjc2ODY2MDQtMGo0a3M5c25pa2plMHNzdGpqbW10Mm1tZTJvZHYyZnUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIyMTIyNjc2ODY2MDQtMGo0a3M5c25pa2plMHNzdGpqbW10Mm1tZTJvZHYyZnUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTY5NzU3NDY5MzQ1NzY0MzUzNjYiLCJoZCI6InV0ZW0uY2wiLCJlbWFpbCI6ImNwZWRyZXJvc0B1dGVtLmNsIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImF0X2hhc2giOiJfMENPQ1BaQTR4QWlHQUJFTlllcS13IiwibmFtZSI6IkNBTUlMTyBFU1RFQkFOIFBFRFJFUk9TIEpBUkEiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSUNwU0o0UWk0WXBhTkctSWJYMWhzam95OEhsdmZZblJ2b3FCeFpxZlQzWHZkLWZqRT1zOTYtYyIsImdpdmVuX25hbWUiOiJDQU1JTE8gRVNURUJBTiIsImZhbWlseV9uYW1lIjoiUEVEUkVST1MgSkFSQSIsImlhdCI6MTczMjI1MTY2MywiZXhwIjoxNzMyMjU1MjYzfQ.V_dIxPRYi-SAKRgv9wSztgUKnivbUEPrYJkyThz0cIf6c9i-XNvoTtyRoCxoD6O_wFoGTdtd9bMroZGYblDvOFg1VAJadd1j4OsuCnDDJyhlVRM6KTdsOi3IZITFCSMedb-3qeNDo9jtevsbI-k_OPauMf1L5p8PiHf0rWLpBVYMfFEU9gO4pCtrJq_DHVTXGSTe_w7scQwGu3L_3Z51gdbIAR9FchkSHru44gQvg_8EyomZNEVgX7sx0fl-4W0v8LsTS7K34Bypkdm8HHl2rF4KelQX2bKE1P_IDjtH5tmyJNnHzQdr6_k3ugTZTV_g00lqkejjriH_26sKZKZtvA';
-
-final Dio dio = Dio(
-  BaseOptions(
-    baseUrl: baseUrl,
-    headers: {
-      'Authorization': 'Bearer $accessToken',
-    },
-  ),
-);
-
-Future<Response<dynamic>?> fetchData() async {
-  try {
-    final response = await dio.get('/v1/info/types');
-    return response;
-  } on DioError catch (e) {
-    print('Error: ${e.message}');
-    print('Response data: ${e.response?.data}');
-    print('Status code: ${e.response?.statusCode}');
-    return null;
-  }
-}
+import 'process.dart';
 
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
 }
 
+
 class _HomePageState extends State<HomePage> {
-  String requirementValue = 'Seleccione una opcion';
-  String careerValue = 'Seleccione una carrera';
-  String categoryValue = 'Categoria';
+  String requirementDD = 'Seleccione una opcion';
+  String categoryDD = 'Categoria';
+  String requirement = '';
+  String category = '';
+  String title = '';
+  String details = '';
   bool showForm = false;
   Color mainColor1 = const Color(0xFF6400ab);
   Color mainColor2 = const Color(0xFFbbd80d);
+  var categories;
+
+  void initState() {
+    super.initState();
+    categoriesRequest();
+  }
+
+  Future<void> categoriesRequest() async {
+    categories = await fetchCategories();
+    print(categories?[0]);
+  }
 
   void changeColors(newColor1,newColor2) {
     setState(() {
@@ -72,27 +63,44 @@ class _HomePageState extends State<HomePage> {
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             ),
+            onChanged: (value) {
+              setState(() {
+                title = value;
+              });
+            },
           ),
           const SizedBox(height: 10),
           DropdownButtonFormField<String>(
-            value: categoryValue,
-            items: <String>['Categoria', 'Categoria 1', 'Categoria 2', 'Categoria 3']
-                .map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
+            value: categories.contains(categoryDD) ? categoryDD : "", // Usa null si no coincide
+            items: [
+              const DropdownMenuItem<String>(
+                value: "",
                 child: Text(
-                  value,
-                  style: const TextStyle(
-                    color: Colors.grey, // Adjust color as needed
-                    fontSize: 16, // Adjust font size as needed
-                    fontWeight: FontWeight.normal, // Adjust font weight as needed
+                  'Elige una categoría',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal,
                   ),
                 ),
-              );
-            }).toList(),
+              ),
+              ...categories.map<DropdownMenuItem<String>>((Category category) {
+                return DropdownMenuItem<String>(
+                  value: category.name,
+                  child: Text(
+                    category.name,
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 16,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ],
             onChanged: (String? newValue) {
               setState(() {
-                categoryValue = newValue!;
+                categoryDD = newValue!;
               });
             },
             decoration: InputDecoration(
@@ -102,8 +110,7 @@ class _HomePageState extends State<HomePage> {
                 borderRadius: BorderRadius.circular(30),
                 borderSide: BorderSide.none,
               ),
-              contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
               labelStyle: const TextStyle(color: Colors.grey),
             ),
           ),
@@ -125,6 +132,11 @@ class _HomePageState extends State<HomePage> {
               contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
               alignLabelWithHint: true,
             ),
+            onChanged: (value) {
+              setState(() {
+                details = value;
+              });
+            },
           ),
         ],
       ),
@@ -201,7 +213,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: DropdownButton<String>(
-                  value: requirementValue,
+                  value: requirementDD,
                   icon: const Icon(Icons.expand_more , color: Colors.white),
                   iconSize: 24,
                   elevation: 16,
@@ -211,16 +223,19 @@ class _HomePageState extends State<HomePage> {
                   onChanged: (String? newValue) {
                     // Handle the selected value here
                     setState(() {
-                      requirementValue = newValue!;
+                      requirementDD = newValue!;
                       showForm = true;
-                      switch (requirementValue) {
+                      switch (requirementDD) {
                         case 'Solicitar informacion':
+                          requirement = 'INFORMATION';
                           changeColors(const Color(0xFF00c4d5), const Color(0xFF00f56d));
                           break;
                         case 'Realizar sugerencia':
+                          requirement = 'SUGGESTION';
                           changeColors(const Color(0xFFcd00d8), const Color(0xFFf9ff00));
                           break;
                         case 'Enviar reclamo':
+                          requirement = 'CLAIM';
                           changeColors(const Color(0xFFff0000), const Color(0xFFb9d800));
                           break;
                         default:
@@ -266,7 +281,10 @@ class _HomePageState extends State<HomePage> {
           child: InkWell(
             borderRadius: BorderRadius.circular(30),
             onTap: () {
-              // Acción del botón
+              print(requirement);
+              print(title);
+              print(category);
+              print(details);
             },
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -279,15 +297,13 @@ class _HomePageState extends State<HomePage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(width: 8), // Espaciado entre texto e ícono
+                SizedBox(width: 8),
                 Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
               ],
             ),
           ),
         ),
-      )
-          : null,
-
+      ) : null,
     );
   }
   Material _headerDrawer(BuildContext context) {
