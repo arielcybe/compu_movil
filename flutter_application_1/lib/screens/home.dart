@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/process.dart'; // Asegúrate de incluir el servicio fetchCategories
 
 class HomePage extends StatefulWidget {
   @override
@@ -6,17 +7,37 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String ticketValue = 'Seleccione una opcion';
-  String carreraValue = 'Seleccione una carrera';
+  String requirementDD = 'Seleccione una opcion';
+  String categoryDD = 'Categoria';
+  String requirement = '';
+  String category = '';
+  String title = '';
+  String details = '';
   bool showForm = false;
-  Color mainColor1 = Color(0xFF6400ab);
-  Color mainColor2 = Color(0xFFbbd80d);
+  Color mainColor1 = const Color(0xFF6400ab);
+  Color mainColor2 = const Color(0xFFbbd80d);
+  List<String> categories = [];
 
-  void changeColors(newColor1,newColor2) {
+  @override
+  void initState() {
+    super.initState();
+    categoriesRequest();
+  }
+
+  Future<void> categoriesRequest() async {
+    final fetchedCategories = await fetchCategories();
+    if (fetchedCategories != null) {
+      setState(() {
+        categories = fetchedCategories.map((category) => category.name).toList();
+      });
+    } else {
+      print("Error al obtener categorías");
+    }
+  }
+
+  void changeColors(Color newColor1, Color newColor2) {
     setState(() {
-      mainColor1 = mainColor1 == mainColor1 ? newColor1 : newColor1;
       mainColor1 = newColor1;
-      mainColor2 = mainColor2 == mainColor2 ? newColor2 : newColor2;
       mainColor2 = newColor2;
     });
   }
@@ -31,10 +52,15 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Column(
         children: [
+          // Campo de texto para título
           TextFormField(
             decoration: InputDecoration(
-              labelText: 'Escriba un titulo',
+              labelText: 'Titulo',
               filled: true,
+              labelStyle: const TextStyle(
+                color: Colors.grey,
+                fontSize: 16,
+              ),
               fillColor: Colors.white,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(30),
@@ -42,11 +68,32 @@ class _HomePageState extends State<HomePage> {
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             ),
+            onChanged: (value) => setState(() {
+              title = value;
+            }),
           ),
-          const SizedBox(height: 10), // Add space between text fields
-          TextFormField(
+          const SizedBox(height: 10),
+          // Dropdown de categorías
+          DropdownButtonFormField<String>(
+            value: categories.contains(categoryDD) ? categoryDD : null, // Verifica si categoryDD está en las opciones
+            items: [
+              DropdownMenuItem(
+                value: "Categoria",
+                child: Text("Categoria"),
+              ),
+              ...categories.map((category) {
+                return DropdownMenuItem<String>(
+                  value: category,
+                  child: Text(category),
+                );
+              }).toList(),
+            ],
+            onChanged: (String? newValue) {
+              setState(() {
+                categoryDD = newValue!;
+              });
+            },
             decoration: InputDecoration(
-              labelText: 'Ingrese su correo electrónico',
               filled: true,
               fillColor: Colors.white,
               border: OutlineInputBorder(
@@ -57,32 +104,27 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 10),
-          DropdownButton<String>(
-            value: carreraValue,
-            icon: const Icon(Icons.arrow_downward, color: Colors.white),
-            iconSize: 24,
-            elevation: 16,
-            style: const TextStyle(color: Colors.white),
-            dropdownColor: Colors.grey,
-            underline: Container(),
-            onChanged: (String? newValue) {
-              setState(() {
-                carreraValue = newValue!;
-              });
-            },
-            items: <String>['Seleccione una carrera', 'Carrera 1', 'Carrera 2', 'Carrera 3']
-                .map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-          ),
+          // Campo de texto para detalles
           TextFormField(
-            decoration: const InputDecoration(
-              labelText: 'Escriba su solicitud de información',
-              hintMaxLines: 5,
+            maxLines: 5,
+            decoration: InputDecoration(
+              labelText: 'Detalles',
+              filled: true,
+              labelStyle: const TextStyle(
+                color: Colors.grey,
+                fontSize: 16,
+              ),
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              alignLabelWithHint: true,
             ),
+            onChanged: (value) => setState(() {
+              details = value;
+            }),
           ),
         ],
       ),
@@ -93,20 +135,9 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home', style: TextStyle(color: Colors.white)),
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
-              icon: const Icon(Icons.menu),
-              color: Colors.white,
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            );
-          },
-        ),
+        title: const Text('Inicio', style: TextStyle(color: Colors.white)),
         flexibleSpace: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 250),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [mainColor1, mainColor2],
@@ -115,33 +146,32 @@ class _HomePageState extends State<HomePage> {
               end: const Alignment(3, 1),
             ),
           ),
-          width: 200,
-          height: 200,
         ),
       ),
       drawer: Drawer(
-        // Aquí va el contenido de tu drawer
         child: ListView(
-          // ...
+          children: [
+            _headerDrawer(),
+            _menuDrawer(),
+          ],
         ),
       ),
       body: Center(
         child: Column(
           children: [
             const Padding(
-              padding: EdgeInsets.only(top: 20.0, left: 20.0), // Add padding here
+              padding: EdgeInsets.only(top: 20.0, left: 20.0),
               child: Text(
-                "Buenas, bienvenido ¿que deseas hacer?",
+                "Buenas, bienvenido ¿qué deseas hacer?",
                 style: TextStyle(fontSize: 15.0, color: Colors.black),
-                textAlign: TextAlign.start, // Alineación a la izquierda
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 20.0), // Add padding here
+              padding: const EdgeInsets.only(top: 20.0),
               child: AnimatedContainer(
                 width: MediaQuery.of(context).size.width * 0.9,
                 height: 50,
-                duration: const Duration(milliseconds: 200),
+                duration: const Duration(milliseconds: 250),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [mainColor1, mainColor2],
@@ -149,30 +179,25 @@ class _HomePageState extends State<HomePage> {
                     begin: const Alignment(-2.5, 1),
                     end: const Alignment(3, 1),
                   ),
-                  borderRadius: BorderRadius.circular(30), // Hacer el contenedor redondo
+                  borderRadius: BorderRadius.circular(30),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: DropdownButton<String>(
-                  value: ticketValue,
-                  icon: const Icon(Icons.expand_more , color: Colors.white),
-                  iconSize: 24,
-                  elevation: 16,
-                  style: const TextStyle(color: Colors.white),
-                  dropdownColor: Colors.grey,
-                  underline: Container(),
+                  value: requirementDD,
                   onChanged: (String? newValue) {
-                    // Handle the selected value here
                     setState(() {
-                      ticketValue = newValue!;
+                      requirementDD = newValue!;
                       showForm = true;
-                      switch (ticketValue) {
+                      switch (requirementDD) {
                         case 'Solicitar informacion':
+                          requirement = 'INFORMATION';
                           changeColors(const Color(0xFF00c4d5), const Color(0xFF00f56d));
                           break;
                         case 'Realizar sugerencia':
+                          requirement = 'SUGGESTION';
                           changeColors(const Color(0xFFcd00d8), const Color(0xFFf9ff00));
                           break;
                         case 'Enviar reclamo':
+                          requirement = 'CLAIM';
                           changeColors(const Color(0xFFff0000), const Color(0xFFb9d800));
                           break;
                         default:
@@ -181,8 +206,12 @@ class _HomePageState extends State<HomePage> {
                       }
                     });
                   },
-                  items: <String>['Seleccione una opcion', 'Solicitar informacion', 'Realizar sugerencia', 'Enviar reclamo']
-                      .map<DropdownMenuItem<String>>((String value) {
+                  items: <String>[
+                    'Seleccione una opcion',
+                    'Solicitar informacion',
+                    'Realizar sugerencia',
+                    'Enviar reclamo',
+                  ].map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),
@@ -193,13 +222,44 @@ class _HomePageState extends State<HomePage> {
             ),
             if (showForm)
               Padding(
-                padding: const EdgeInsets.only(top: 20.0), // Adjust the padding as needed
+                padding: const EdgeInsets.only(top: 20.0),
                 child: buildForm(),
-              )
+              ),
           ],
         ),
       ),
     );
   }
-}
 
+  Widget _headerDrawer() {
+    return UserAccountsDrawerHeader(
+      accountName: const Text("Nombre Apellido"),
+      accountEmail: const Text("correo@utem.cl"),
+      currentAccountPicture: const CircleAvatar(
+        backgroundColor: Colors.orange,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [mainColor1, mainColor2],
+        ),
+      ),
+    );
+  }
+
+  Widget _menuDrawer() {
+    return Column(
+      children: [
+        ListTile(
+          leading: const Icon(Icons.history),
+          title: const Text('Mis tickets'),
+          onTap: () {},
+        ),
+        ListTile(
+          leading: const Icon(Icons.logout),
+          title: const Text('Cerrar sesión'),
+          onTap: () {},
+        ),
+      ],
+    );
+  }
+}
