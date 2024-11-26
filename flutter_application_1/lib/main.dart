@@ -7,7 +7,6 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-
 class _HomePageState extends State<HomePage> {
   String requirementDD = 'Seleccione una opcion';
   String categoryDD = 'Categoria';
@@ -25,7 +24,6 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     categoriesRequest();
     requerimentsRequest();
-
   }
 
   Future<void> categoriesRequest() async {
@@ -38,7 +36,7 @@ class _HomePageState extends State<HomePage> {
     print(requirements?[1].name);
   }
 
-  void changeColors(newColor1,newColor2) {
+  void changeColors(newColor1, newColor2) {
     setState(() {
       mainColor1 = mainColor1 == mainColor1 ? newColor1 : newColor1;
       mainColor1 = newColor1;
@@ -61,8 +59,8 @@ class _HomePageState extends State<HomePage> {
             decoration: InputDecoration(
               labelText: 'Titulo',
               filled: true,
-              labelStyle: const TextStyle(color:
-              Colors.grey,
+              labelStyle: const TextStyle(
+                color: Colors.grey,
                 fontSize: 16,
               ),
               fillColor: Colors.white,
@@ -70,7 +68,8 @@ class _HomePageState extends State<HomePage> {
                 borderRadius: BorderRadius.circular(30),
                 borderSide: BorderSide.none,
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             ),
             onChanged: (value) {
               setState(() {
@@ -80,7 +79,9 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 10),
           DropdownButtonFormField<String>(
-            value: categories.contains(categoryDD) ? categoryDD : "", // Usa null si no coincide
+            value: categories.contains(categoryDD)
+                ? categoryDD
+                : "", // Usa null si no coincide
             items: [
               const DropdownMenuItem<String>(
                 value: "",
@@ -110,7 +111,8 @@ class _HomePageState extends State<HomePage> {
             onChanged: (String? newValue) {
               setState(() {
                 categoryDD = newValue!;
-                category = categories.firstWhere((cat) => cat.name == newValue).token;
+                category =
+                    categories.firstWhere((cat) => cat.name == newValue).token;
               });
             },
             decoration: InputDecoration(
@@ -120,7 +122,8 @@ class _HomePageState extends State<HomePage> {
                 borderRadius: BorderRadius.circular(30),
                 borderSide: BorderSide.none,
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
               labelStyle: const TextStyle(color: Colors.grey),
             ),
           ),
@@ -130,8 +133,8 @@ class _HomePageState extends State<HomePage> {
             decoration: InputDecoration(
               labelText: 'Detalles',
               filled: true,
-              labelStyle: const TextStyle(color:
-              Colors.grey,
+              labelStyle: const TextStyle(
+                color: Colors.grey,
                 fontSize: 16,
               ),
               fillColor: Colors.white,
@@ -139,7 +142,8 @@ class _HomePageState extends State<HomePage> {
                 borderRadius: BorderRadius.circular(30),
                 borderSide: BorderSide.none,
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
               alignLabelWithHint: true,
             ),
             onChanged: (value) {
@@ -199,7 +203,8 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             const Padding(
-              padding: EdgeInsets.only(top: 20.0, left: 20.0), // Add padding here
+              padding:
+                  EdgeInsets.only(top: 20.0, left: 20.0), // Add padding here
               child: Text(
                 "Buenas, bienvenido ¿que deseas hacer?",
                 style: TextStyle(fontSize: 15.0, color: Colors.black),
@@ -219,12 +224,14 @@ class _HomePageState extends State<HomePage> {
                     begin: const Alignment(-2.5, 1),
                     end: const Alignment(3, 1),
                   ),
-                  borderRadius: BorderRadius.circular(30), // Hacer el contenedor redondo
+                  borderRadius:
+                      BorderRadius.circular(30), // Hacer el contenedor redondo
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: DropdownButton<String>(
                   value: requirementDD,
-                  icon: const Icon(Icons.expand_more , color: Colors.white),
+                  icon: const Icon(Icons.expand_more, color: Colors.white),
                   iconSize: 24,
                   elevation: 16,
                   style: const TextStyle(color: Colors.white),
@@ -238,24 +245,32 @@ class _HomePageState extends State<HomePage> {
                       switch (requirementDD) {
                         case 'Solicitar informacion':
                           requirement = requirements?[2].name;
-                          changeColors(const Color(0xFF00c4d5), const Color(0xFF00f56d));
+                          changeColors(
+                              const Color(0xFF00c4d5), const Color(0xFF00f56d));
                           break;
                         case 'Realizar sugerencia':
                           requirement = requirements?[1].name;
-                          changeColors(const Color(0xFFcd00d8), const Color(0xFFf9ff00));
+                          changeColors(
+                              const Color(0xFFcd00d8), const Color(0xFFf9ff00));
                           break;
                         case 'Enviar reclamo':
                           requirement = requirements?[0].name;
-                          changeColors(const Color(0xFFff0000), const Color(0xFFb9d800));
+                          changeColors(
+                              const Color(0xFFff0000), const Color(0xFFb9d800));
                           break;
                         default:
                           showForm = false;
-                          changeColors(const Color(0xFF6400ab), const Color(0xFFbbd80d));
+                          changeColors(
+                              const Color(0xFF6400ab), const Color(0xFFbbd80d));
                       }
                     });
                   },
-                  items: <String>['Seleccione una opcion', 'Solicitar informacion', 'Realizar sugerencia', 'Enviar reclamo']
-                      .map<DropdownMenuItem<String>>((String value) {
+                  items: <String>[
+                    'Seleccione una opcion',
+                    'Solicitar informacion',
+                    'Realizar sugerencia',
+                    'Enviar reclamo'
+                  ].map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),
@@ -266,7 +281,8 @@ class _HomePageState extends State<HomePage> {
             ),
             if (showForm)
               Padding(
-                padding: const EdgeInsets.only(top: 20.0), // Adjust the padding as needed
+                padding: const EdgeInsets.only(
+                    top: 20.0), // Adjust the padding as needed
                 child: buildForm(),
               )
           ],
@@ -274,50 +290,54 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: showForm
           ? AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        width: 150, // Ancho personalizado
-        height: 50, // Altura personalizada
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [mainColor1, mainColor2], // Gradiente dinámico
-            stops: const [0.2, 0.9],
-            begin: const Alignment(-2.5, 1),
-            end: const Alignment(3, 1),
-          ),
-          borderRadius: BorderRadius.circular(30), // Bordes redondeados
-        ),
-        child: Material(
-          color: Colors.transparent, // Evita el color por defecto de Material
-          child: InkWell(
-            borderRadius: BorderRadius.circular(30),
-            onTap: () async {
-              await createTicket(
-              categoryToken: category,
-              type: requirement,
-              subject: title,
-              message: details,
-              );
-            },
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Enviar',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+              duration: const Duration(milliseconds: 250),
+              width: 150, // Ancho personalizado
+              height: 50, // Altura personalizada
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [mainColor1, mainColor2], // Gradiente dinámico
+                  stops: const [0.2, 0.9],
+                  begin: const Alignment(-2.5, 1),
+                  end: const Alignment(3, 1),
+                ),
+                borderRadius: BorderRadius.circular(30), // Bordes redondeados
+              ),
+              child: Material(
+                color: Colors
+                    .transparent, // Evita el color por defecto de Material
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(30),
+                  onTap: () async {
+                    await createTicket(
+                      categoryToken: category,
+                      type: requirement,
+                      subject: title,
+                      message: details,
+                    );
+                  },
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Enviar',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Icon(Icons.arrow_forward_ios,
+                          color: Colors.white, size: 16),
+                    ],
                   ),
                 ),
-                SizedBox(width: 8),
-                Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
-              ],
-            ),
-          ),
-        ),
-      ) : null,
+              ),
+            )
+          : null,
     );
   }
+
   Material _headerDrawer(BuildContext context) {
     return Material(
       child: DecoratedBox(
@@ -354,7 +374,7 @@ class _HomePageState extends State<HomePage> {
                     fontSize: 15,
                     color: Colors.white,
                     fontWeight:
-                    FontWeight.bold, // Añadido para mejor visibilidad
+                        FontWeight.bold, // Añadido para mejor visibilidad
                   ),
                 ),
                 Text(
@@ -380,7 +400,7 @@ class _HomePageState extends State<HomePage> {
           title: const Text('Mis tickets'),
           onTap: () {
             Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => const ticketScreen(),
+              builder: (context) => const TicketScreen(),
             ));
           },
         ),
