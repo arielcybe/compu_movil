@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'process.dart';
+import 'tickets.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -322,7 +323,7 @@ class _HomePageState extends State<HomePage> {
       child: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF6400ab),Color(0xFFbbd80d)],
+            colors: [Color(0xFF6400ab), Color(0xFFbbd80d)],
             stops: [0.2, 0.9],
             begin: Alignment(-2.5, 1),
             end: Alignment(3, 1),
@@ -336,8 +337,8 @@ class _HomePageState extends State<HomePage> {
               bottom: 24,
             ),
             child: const Column(
-              mainAxisAlignment:
-              MainAxisAlignment.center, // Centra los elementos verticalmente
+              mainAxisAlignment: MainAxisAlignment
+                  .center, // Centra los elementos verticalmente
               children: [
                 CircleAvatar(
                   radius: 35,
@@ -352,7 +353,8 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(
                     fontSize: 15,
                     color: Colors.white,
-                    fontWeight: FontWeight.bold, // Añadido para mejor visibilidad
+                    fontWeight:
+                    FontWeight.bold, // Añadido para mejor visibilidad
                   ),
                 ),
                 Text(
@@ -376,7 +378,11 @@ class _HomePageState extends State<HomePage> {
         ListTile(
           leading: const Icon(Icons.history),
           title: const Text('Mis tickets'),
-          onTap: () {},
+          onTap: () {
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => const ticketScreen(),
+            ));
+          },
         ),
         const SizedBox(height: 400),
         const Divider(
@@ -402,6 +408,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
