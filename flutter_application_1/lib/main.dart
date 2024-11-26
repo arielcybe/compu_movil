@@ -18,15 +18,23 @@ class _HomePageState extends State<HomePage> {
   Color mainColor1 = const Color(0xFF6400ab);
   Color mainColor2 = const Color(0xFFbbd80d);
   var categories;
+  var requirements;
 
   void initState() {
     super.initState();
     categoriesRequest();
+    requerimentsRequest();
+
   }
 
   Future<void> categoriesRequest() async {
     categories = await fetchCategories();
     print(categories?[0]);
+  }
+
+  Future<void> requerimentsRequest() async {
+    requirements = await fetchRequirements();
+    print(requirements?[1].name);
   }
 
   void changeColors(newColor1,newColor2) {
@@ -76,7 +84,7 @@ class _HomePageState extends State<HomePage> {
               const DropdownMenuItem<String>(
                 value: "",
                 child: Text(
-                  'Elige una categoría',
+                  'Categoría',
                   style: TextStyle(
                     color: Colors.grey,
                     fontSize: 16,
@@ -101,6 +109,7 @@ class _HomePageState extends State<HomePage> {
             onChanged: (String? newValue) {
               setState(() {
                 categoryDD = newValue!;
+                category = categories.firstWhere((cat) => cat.name == newValue).token;
               });
             },
             decoration: InputDecoration(
@@ -227,15 +236,15 @@ class _HomePageState extends State<HomePage> {
                       showForm = true;
                       switch (requirementDD) {
                         case 'Solicitar informacion':
-                          requirement = 'INFORMATION';
+                          requirement = requirements?[2].name;
                           changeColors(const Color(0xFF00c4d5), const Color(0xFF00f56d));
                           break;
                         case 'Realizar sugerencia':
-                          requirement = 'SUGGESTION';
+                          requirement = requirements?[1].name;
                           changeColors(const Color(0xFFcd00d8), const Color(0xFFf9ff00));
                           break;
                         case 'Enviar reclamo':
-                          requirement = 'CLAIM';
+                          requirement = requirements?[0].name;
                           changeColors(const Color(0xFFff0000), const Color(0xFFb9d800));
                           break;
                         default:
@@ -280,11 +289,13 @@ class _HomePageState extends State<HomePage> {
           color: Colors.transparent, // Evita el color por defecto de Material
           child: InkWell(
             borderRadius: BorderRadius.circular(30),
-            onTap: () {
-              print(requirement);
-              print(title);
-              print(category);
-              print(details);
+            onTap: () async {
+              await createTicket(
+              categoryToken: category,
+              type: requirement,
+              subject: title,
+              message: details,
+              );
             },
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -380,57 +391,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
-// class MyHomePage extends StatefulWidget {
-//   const MyHomePage({super.key, required this.title});
-//
-//   final String title;
-//
-//   @override
-//   State<MyHomePage> createState() => _MyHomePageState();
-// }
-//
-// class _MyHomePageState extends State<MyHomePage> {
-//   String _data = ''; // Variable to store the fetched data
-//
-//   Future<void> _makeRequest() async {
-//     final response = await fetchData();
-//     if (response != null) {
-//       setState(() {
-//         // Si response.data es una lista o un mapa, conviértelo a String
-//         _data = response.data is String
-//             ? response.data
-//             : jsonEncode(response.data); // Convierte objetos a JSON String
-//       });
-//     } else {
-//       print('Error fetching data');
-//     }
-//   }
-//
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text(widget.title),
-//       ),
-//       body: Center(
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: <Widget>[
-//             const Text('Data from API:'),
-//             Text(_data), // Display the fetched data
-//           ],
-//         ),
-//       ),
-//       floatingActionButton: FloatingActionButton(
-//         onPressed: _makeRequest,
-//         tooltip: 'Fetch Data',
-//         child: const Icon(Icons.download),
-//       ),
-//     );
-//   }
-// }
 
 void main() {
   runApp(const MyApp());
