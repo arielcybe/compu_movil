@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import '../services/process.dart'; // Asegúrate de incluir el servicio fetchCategories
+import 'package:cached_network_image/cached_network_image.dart';
+import '../services/StorageService.dart';
+import 'package:logger/logger.dart';
+import '../services/process.dart';
+
 
 class HomePage extends StatefulWidget {
   @override
@@ -18,6 +22,8 @@ class _HomePageState extends State<HomePage> {
   Color mainColor2 = const Color(0xFFbbd80d);
   List<String> categories = [];
 
+  static final Logger _logger = Logger();
+
   @override
   void initState() {
     super.initState();
@@ -31,7 +37,7 @@ class _HomePageState extends State<HomePage> {
         categories = fetchedCategories.map((category) => category.name).toList();
       });
     } else {
-      print("Error al obtener categorías");
+      _logger.e("Error al obtener categorías");
     }
   }
 
@@ -75,9 +81,9 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 10),
           // Dropdown de categorías
           DropdownButtonFormField<String>(
-            value: categories.contains(categoryDD) ? categoryDD : null, // Verifica si categoryDD está en las opciones
+            value: categories.contains(categoryDD) ? categoryDD : null,
             items: [
-              DropdownMenuItem(
+              const DropdownMenuItem(
                 value: "Categoria",
                 child: Text("Categoria"),
               ),
@@ -150,9 +156,24 @@ class _HomePageState extends State<HomePage> {
       ),
       drawer: Drawer(
         child: ListView(
+          padding: EdgeInsets.zero,
           children: [
-            _headerDrawer(),
-            _menuDrawer(),
+            CustomDrawerHeader(mainColor1: mainColor1, mainColor2: mainColor2),
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: const Text('Mis tickets'),
+              onTap: () {
+                _logger.d('Mis tickets seleccionados');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Cerrar sesión'),
+              onTap: () {
+                _logger.d('Cerrar sesión');
+                // Lógica para cerrar sesión
+              },
+            ),
           ],
         ),
       ),
@@ -230,36 +251,84 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+}
 
-  Widget _headerDrawer() {
+class CustomDrawerHeader extends StatelessWidget {
+  final Color mainColor1;
+  final Color mainColor2;
+
+  const CustomDrawerHeader({required this.mainColor1, required this.mainColor2});
+
+  @override
+  Widget build(BuildContext context) {
     return UserAccountsDrawerHeader(
-      accountName: const Text("Nombre Apellido"),
-      accountEmail: const Text("correo@utem.cl"),
-      currentAccountPicture: const CircleAvatar(
-        backgroundColor: Colors.orange,
+      accountName: FutureBuilder<String>(
+        future: StorageService.getValue('name'),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            final String name = snapshot.data ?? 'Usuario';
+            return Text(
+              name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            );
+          } else {
+            return const Text('Cargando...',
+                style: TextStyle(color: Colors.white));
+          }
+        },
+      ),
+      accountEmail: FutureBuilder<String>(
+        future: StorageService.getValue('email'),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            final String email = snapshot.data ?? 'correo@utem.cl';
+            return Text(
+              email,
+              style: const TextStyle(color: Colors.white70),
+            );
+          } else {
+            return const Text('Cargando...',
+                style: TextStyle(color: Colors.white70));
+          }
+        },
+      ),
+      currentAccountPicture: CircleAvatar(
+        child: ClipOval(
+          child: FutureBuilder<String>(
+            future: StorageService.getValue('image'),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                final String photoUrl = snapshot.data ?? '';
+                if (photoUrl.isNotEmpty) {
+                  return CachedNetworkImage(
+                    imageUrl: photoUrl,
+                    placeholder: (context, url) {
+                      return const CircularProgressIndicator();
+                    },
+                    errorWidget: (context, url, error) {
+                      return const Icon(Icons.person, color: Colors.white);
+                    },
+                  );
+                } else {
+                  return const Icon(Icons.person, color: Colors.white);
+                }
+              } else {
+                return const CircularProgressIndicator();
+              }
+            },
+          ),
+        ),
       ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [mainColor1, mainColor2],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
-    );
-  }
-
-  Widget _menuDrawer() {
-    return Column(
-      children: [
-        ListTile(
-          leading: const Icon(Icons.history),
-          title: const Text('Mis tickets'),
-          onTap: () {},
-        ),
-        ListTile(
-          leading: const Icon(Icons.logout),
-          title: const Text('Cerrar sesión'),
-          onTap: () {},
-        ),
-      ],
     );
   }
 }
