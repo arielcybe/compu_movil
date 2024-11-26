@@ -15,11 +15,11 @@ class LoginScreen extends StatelessWidget {
       _logger.i('Inicio de sesión exitoso');
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomePage()),
+        MaterialPageRoute(builder: (context) => const HomePage()),
       );
     } else {
       _logger.e('Falló el inicio de sesión');
-      ErrorScreen.showErrorDialog(context, 'No se pudo iniciar sesión. Verifica tus credenciales.');
+      ErrorScreen.showErrorDialog(context, 'No se pudo iniciar sesión. Inténtalo nuevamente.');
     }
   }
 
@@ -27,8 +27,8 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        width: double.infinity, // Asegúrate de que ocupe todo el ancho
-        height: double.infinity, // Asegúrate de que ocupe todo el alto
+        width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,

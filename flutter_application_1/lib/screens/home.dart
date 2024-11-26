@@ -1,43 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import '../services/StorageService.dart';
-import 'package:logger/logger.dart';
-import '../services/process.dart';
+import 'package:flutter_application_1/services/process.dart';
+import 'package:flutter_application_1/tickets.dart';
+import 'package:flutter_application_1/services/StorageService.dart';
 
+import 'Login.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  String requirementDD = 'Seleccione una opcion';
-  String categoryDD = 'Categoria';
+  String requirementDD = 'Seleccione una opción';
+  String categoryDD = 'Categoría';
   String requirement = '';
   String category = '';
   String title = '';
   String details = '';
   bool showForm = false;
+  bool isSubmitting = false;
+  List<Category> categories = [];
+  List<String> requirements = ['Información', 'Sugerencia', 'Reclamo'];
   Color mainColor1 = const Color(0xFF6400ab);
   Color mainColor2 = const Color(0xFFbbd80d);
-  List<String> categories = [];
-
-  static final Logger _logger = Logger();
 
   @override
   void initState() {
     super.initState();
-    categoriesRequest();
+    fetchCategories();
   }
 
-  Future<void> categoriesRequest() async {
-    final fetchedCategories = await fetchCategories();
-    if (fetchedCategories != null) {
-      setState(() {
-        categories = fetchedCategories.map((category) => category.name).toList();
-      });
-    } else {
-      _logger.e("Error al obtener categorías");
+  Future<void> fetchCategories() async {
+    try {
+      final fetchedCategories = await fetchCategoriesFromApi();
+      if (fetchedCategories.isNotEmpty) {
+        setState(() {
+          categories = fetchedCategories;
+        });
+        print('Categorías obtenidas: $categories');
+      } else {
+        print('No se encontraron categorías.');
+      }
+    } catch (e) {
+      print('Error al cargar categorías: $e');
     }
   }
 
@@ -45,6 +52,86 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       mainColor1 = newColor1;
       mainColor2 = newColor2;
+    });
+  }
+
+  Future<void> submitTicket() async {
+    if (category.isEmpty || requirement.isEmpty || title.isEmpty || details.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: const Text('Por favor completa todos los campos antes de enviar.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      isSubmitting = true;
+    });
+
+    try {
+      await createTicket(
+        categoryToken: category,
+        type: requirement,
+        subject: title,
+        message: details,
+      );
+
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Éxito'),
+          content: const Text('¡Ticket enviado con éxito!'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                resetForm();
+              },
+              child: const Text('Cerrar'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      print('Error al enviar ticket: $e');
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: const Text('Hubo un problema al enviar el ticket. Inténtalo de nuevo.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      setState(() {
+        isSubmitting = false;
+      });
+    }
+  }
+
+  void resetForm() {
+    setState(() {
+      requirementDD = 'Seleccione una opción';
+      categoryDD = 'Categoría';
+      requirement = '';
+      category = '';
+      title = '';
+      details = '';
+      showForm = false;
     });
   }
 
@@ -58,10 +145,9 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Column(
         children: [
-          // Campo de texto para título
           TextFormField(
             decoration: InputDecoration(
-              labelText: 'Titulo',
+              labelText: 'Título',
               filled: true,
               labelStyle: const TextStyle(
                 color: Colors.grey,
@@ -79,25 +165,31 @@ class _HomePageState extends State<HomePage> {
             }),
           ),
           const SizedBox(height: 10),
-          // Dropdown de categorías
           DropdownButtonFormField<String>(
-            value: categories.contains(categoryDD) ? categoryDD : null,
+            value: categoryDD == 'Categoría' ? null : categoryDD,
             items: [
               const DropdownMenuItem(
-                value: "Categoria",
-                child: Text("Categoria"),
+                value: 'Categoría',
+                child: Text('Categoría'),
               ),
               ...categories.map((category) {
                 return DropdownMenuItem<String>(
-                  value: category,
-                  child: Text(category),
+                  value: category.name,
+                  child: Text(category.name),
                 );
               }).toList(),
             ],
             onChanged: (String? newValue) {
-              setState(() {
-                categoryDD = newValue!;
-              });
+              if (newValue != null) {
+                setState(() {
+                  categoryDD = newValue;
+                  final selectedCategory = categories.firstWhere(
+                        (cat) => cat.name == newValue,
+                    orElse: () => Category(token: '', name: '', description: ''),
+                  );
+                  category = selectedCategory.token;
+                });
+              }
             },
             decoration: InputDecoration(
               filled: true,
@@ -110,7 +202,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 10),
-          // Campo de texto para detalles
           TextFormField(
             maxLines: 5,
             decoration: InputDecoration(
@@ -156,24 +247,84 @@ class _HomePageState extends State<HomePage> {
       ),
       drawer: Drawer(
         child: ListView(
-          padding: EdgeInsets.zero,
           children: [
-            CustomDrawerHeader(mainColor1: mainColor1, mainColor2: mainColor2),
+            DrawerHeader(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [mainColor1, mainColor2],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: const Text(
+                'Menú',
+                style: TextStyle(color: Colors.white, fontSize: 24),
+              ),
+            ),
             ListTile(
               leading: const Icon(Icons.history),
-              title: const Text('Mis tickets'),
+              title: const Text('Mis Tickets'),
               onTap: () {
-                _logger.d('Mis tickets seleccionados');
+                if (category.isNotEmpty) {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => TicketScreen(categoryToken: category),
+                  ));
+                } else {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Error'),
+                      content: const Text('Selecciona una categoría para ver los tickets.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Cerrar'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
               },
             ),
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Cerrar sesión'),
-              onTap: () {
-                _logger.d('Cerrar sesión');
-                // Lógica para cerrar sesión
+              onTap: () async {
+                // Mostrar un diálogo de confirmación antes de cerrar sesión
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Confirmar cierre de sesión'),
+                    content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false), // Cancelar
+                        child: const Text('Cancelar'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true), // Confirmar
+                        child: const Text('Cerrar sesión'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm == true) {
+                  // Borrar datos del usuario
+                  await StorageService.clear(); // Asegúrate de tener esta función implementada en StorageService
+
+                  // Redirigir a la pantalla de inicio de sesión
+                  if (context.mounted) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                          (route) => false, // Eliminar todas las rutas previas
+                    );
+                  }
+                }
               },
             ),
+
           ],
         ),
       ),
@@ -181,64 +332,50 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             const Padding(
-              padding: EdgeInsets.only(top: 20.0, left: 20.0),
+              padding: EdgeInsets.only(top: 20.0),
               child: Text(
                 "Buenas, bienvenido ¿qué deseas hacer?",
-                style: TextStyle(fontSize: 15.0, color: Colors.black),
+                style: TextStyle(fontSize: 16.0, color: Colors.black),
               ),
             ),
             Padding(
               padding: const EdgeInsets.only(top: 20.0),
-              child: AnimatedContainer(
-                width: MediaQuery.of(context).size.width * 0.9,
-                height: 50,
-                duration: const Duration(milliseconds: 250),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [mainColor1, mainColor2],
-                    stops: const [0.2, 0.9],
-                    begin: const Alignment(-2.5, 1),
-                    end: const Alignment(3, 1),
-                  ),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: DropdownButton<String>(
-                  value: requirementDD,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      requirementDD = newValue!;
-                      showForm = true;
-                      switch (requirementDD) {
-                        case 'Solicitar informacion':
-                          requirement = 'INFORMATION';
-                          changeColors(const Color(0xFF00c4d5), const Color(0xFF00f56d));
-                          break;
-                        case 'Realizar sugerencia':
-                          requirement = 'SUGGESTION';
-                          changeColors(const Color(0xFFcd00d8), const Color(0xFFf9ff00));
-                          break;
-                        case 'Enviar reclamo':
-                          requirement = 'CLAIM';
-                          changeColors(const Color(0xFFff0000), const Color(0xFFb9d800));
-                          break;
-                        default:
-                          showForm = false;
-                          changeColors(const Color(0xFF6400ab), const Color(0xFFbbd80d));
-                      }
-                    });
-                  },
-                  items: <String>[
-                    'Seleccione una opcion',
-                    'Solicitar informacion',
-                    'Realizar sugerencia',
-                    'Enviar reclamo',
-                  ].map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
+              child: DropdownButton<String>(
+                value: requirementDD,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    requirementDD = newValue!;
+                    showForm = true;
+                    switch (requirementDD) {
+                      case 'Información':
+                        requirement = 'INFORMATION';
+                        changeColors(const Color(0xFF00c4d5), const Color(0xFF00f56d));
+                        break;
+                      case 'Sugerencia':
+                        requirement = 'SUGGESTION';
+                        changeColors(const Color(0xFFcd00d8), const Color(0xFFf9ff00));
+                        break;
+                      case 'Reclamo':
+                        requirement = 'CLAIM';
+                        changeColors(const Color(0xFFff0000), const Color(0xFFb9d800));
+                        break;
+                      default:
+                        showForm = false;
+                        changeColors(const Color(0xFF6400ab), const Color(0xFFbbd80d));
+                    }
+                  });
+                },
+                items: <String>[
+                  'Seleccione una opción',
+                  'Información',
+                  'Sugerencia',
+                  'Reclamo',
+                ].map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
               ),
             ),
             if (showForm)
@@ -249,86 +386,14 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class CustomDrawerHeader extends StatelessWidget {
-  final Color mainColor1;
-  final Color mainColor2;
-
-  const CustomDrawerHeader({required this.mainColor1, required this.mainColor2});
-
-  @override
-  Widget build(BuildContext context) {
-    return UserAccountsDrawerHeader(
-      accountName: FutureBuilder<String>(
-        future: StorageService.getValue('name'),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            final String name = snapshot.data ?? 'Usuario';
-            return Text(
-              name,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            );
-          } else {
-            return const Text('Cargando...',
-                style: TextStyle(color: Colors.white));
-          }
-        },
-      ),
-      accountEmail: FutureBuilder<String>(
-        future: StorageService.getValue('email'),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            final String email = snapshot.data ?? 'correo@utem.cl';
-            return Text(
-              email,
-              style: const TextStyle(color: Colors.white70),
-            );
-          } else {
-            return const Text('Cargando...',
-                style: TextStyle(color: Colors.white70));
-          }
-        },
-      ),
-      currentAccountPicture: CircleAvatar(
-        child: ClipOval(
-          child: FutureBuilder<String>(
-            future: StorageService.getValue('image'),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                final String photoUrl = snapshot.data ?? '';
-                if (photoUrl.isNotEmpty) {
-                  return CachedNetworkImage(
-                    imageUrl: photoUrl,
-                    placeholder: (context, url) {
-                      return const CircularProgressIndicator();
-                    },
-                    errorWidget: (context, url, error) {
-                      return const Icon(Icons.person, color: Colors.white);
-                    },
-                  );
-                } else {
-                  return const Icon(Icons.person, color: Colors.white);
-                }
-              } else {
-                return const CircularProgressIndicator();
-              }
-            },
-          ),
-        ),
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [mainColor1, mainColor2],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+      floatingActionButton: showForm
+          ? FloatingActionButton.extended(
+        onPressed: isSubmitting ? null : submitTicket,
+        label: const Text('Enviar'),
+        icon: const Icon(Icons.send),
+        backgroundColor: mainColor1,
+      )
+          : null,
     );
   }
 }
