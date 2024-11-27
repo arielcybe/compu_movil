@@ -23,31 +23,26 @@ class _HomePageState extends State<HomePage> {
   String details = '';
   bool showForm = false;
   bool isSubmitting = false;
-  List<Category> categories = [];
-  List<String> requirements = ['Información', 'Sugerencia', 'Reclamo'];
+  var categories;
+  var requirements;
   Color mainColor1 = const Color(0xFF6400ab);
   Color mainColor2 = const Color(0xFFbbd80d);
 
   @override
   void initState() {
     super.initState();
-    fetchCategories();
+    categoriesRequest();
+    requerimentsRequest();
   }
 
-  Future<void> fetchCategories() async {
-    try {
-      final fetchedCategories = await fetchCategoriesFromApi();
-      if (fetchedCategories.isNotEmpty) {
-        setState(() {
-          categories = fetchedCategories;
-        });
-        print('Categorías obtenidas: $categories');
-      } else {
-        print('No se encontraron categorías.');
-      }
-    } catch (e) {
-      print('Error al cargar categorías: $e');
-    }
+  Future<void> categoriesRequest() async {
+    categories = await fetchCategoriesFromApi();
+    print(categories?[0]);
+  }
+
+  Future<void> requerimentsRequest() async {
+    requirements = await fetchRequirementsFromApi();
+    print(requirements?[1].name);
   }
 
   void changeColors(Color newColor1, Color newColor2) {
@@ -134,6 +129,7 @@ class _HomePageState extends State<HomePage> {
       title = '';
       details = '';
       showForm = false;
+      changeColors(const Color(0xFF6400ab), const Color(0xFFbbd80d));
     });
   }
 
@@ -168,30 +164,38 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 10),
           DropdownButtonFormField<String>(
-            value: categoryDD == 'Categoría' ? null : categoryDD,
+            value: categories.contains(categoryDD) ? categoryDD : "", // Usa null si no coincide
             items: [
-              const DropdownMenuItem(
-                value: 'Categoría',
-                child: Text('Categoría'),
+              const DropdownMenuItem<String>(
+                value: "",
+                child: Text(
+                  'Categoría',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
               ),
-              ...categories.map((category) {
+              ...categories.map<DropdownMenuItem<String>>((Category category) {
                 return DropdownMenuItem<String>(
                   value: category.name,
-                  child: Text(category.name),
+                  child: Text(
+                    category.name,
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 16,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
                 );
               }).toList(),
             ],
             onChanged: (String? newValue) {
-              if (newValue != null) {
-                setState(() {
-                  categoryDD = newValue;
-                  final selectedCategory = categories.firstWhere(
-                        (cat) => cat.name == newValue,
-                    orElse: () => Category(token: '', name: '', description: ''),
-                  );
-                  category = selectedCategory.token;
-                });
-              }
+              setState(() {
+                categoryDD = newValue!;
+                category = categories.firstWhere((cat) => cat.name == newValue).token;
+              });
             },
             decoration: InputDecoration(
               filled: true,
@@ -201,6 +205,7 @@ class _HomePageState extends State<HomePage> {
                 borderSide: BorderSide.none,
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              labelStyle: const TextStyle(color: Colors.grey),
             ),
           ),
           const SizedBox(height: 10),
@@ -235,6 +240,17 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inicio', style: TextStyle(color: Colors.white)),
+        leading: Builder(
+          builder: (BuildContext context) {
+            return IconButton(
+              icon: const Icon(Icons.menu),
+              color: Colors.white,
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            );
+          },
+        ),
         flexibleSpace: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           decoration: BoxDecoration(
@@ -245,94 +261,23 @@ class _HomePageState extends State<HomePage> {
               end: const Alignment(3, 1),
             ),
           ),
+          width: 200,
+          height: 200,
         ),
       ),
       drawer: Drawer(
-        child: ListView(
-          children: [
-            FutureBuilder(
-              future: Future.wait([
-                StorageService.getValue('name'),
-                StorageService.getValue('email'),
-                StorageService.getValue('image'),
-              ]),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  final userData = snapshot.data ?? ['', '', ''];
-                  final userName = userData[0] ?? 'Usuario';
-                  final userEmail = userData[1] ?? 'Correo no disponible';
-                  final userImage = userData[2] ?? '';
-
-                  return UserAccountsDrawerHeader(
-                    accountName: Text(userName),
-                    accountEmail: Text(userEmail),
-                    currentAccountPicture: userImage.isNotEmpty
-                        ? CircleAvatar(
-                      backgroundImage: NetworkImage(userImage),
-                    )
-                        : const CircleAvatar(child: Icon(Icons.person)),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [mainColor1, mainColor2],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                  );
-                }
-                return const DrawerHeader(child: CircularProgressIndicator());
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.history),
-              title: const Text('Historial de Tickets'),
-              onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const HistorialScreen(),
-                ));
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Cerrar sesión'),
-              onTap: () async {
-                // Mostrar un diálogo de confirmación
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Confirmar cierre de sesión'),
-                    content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: const Text('Cancelar'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        child: const Text('Cerrar sesión'),
-                      ),
-                    ],
-                  ),
-                );
-
-                if (confirm == true) {
-                  // Limpia el almacenamiento y cierra sesión en Google
-                  await GoogleService.logOut();
-                  await StorageService.clear();
-                  // Redirige al usuario a la pantalla de inicio de sesión
-                  if (context.mounted) {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
-                          (route) => false, // Eliminar todas las rutas previas
-                    );
-                  }
-                }
-              },
-            ),
-          ],
+        // Aquí va el contenido de tu drawer
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _headerDrawer(context),
+              _menuDrawer(context),
+            ],
+          ),
         ),
       ),
+
       body: Center(
         child: Column(
           children: [
@@ -345,60 +290,245 @@ class _HomePageState extends State<HomePage> {
             ),
             Padding(
               padding: const EdgeInsets.only(top: 20.0),
-              child: DropdownButton<String>(
-                value: requirementDD,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    requirementDD = newValue!;
-                    showForm = true;
-                    switch (requirementDD) {
-                      case 'Información':
-                        requirement = 'INFORMATION';
-                        changeColors(const Color(0xFF00c4d5), const Color(0xFF00f56d));
-                        break;
-                      case 'Sugerencia':
-                        requirement = 'SUGGESTION';
-                        changeColors(const Color(0xFFcd00d8), const Color(0xFFf9ff00));
-                        break;
-                      case 'Reclamo':
-                        requirement = 'CLAIM';
-                        changeColors(const Color(0xFFff0000), const Color(0xFFb9d800));
-                        break;
-                      default:
-                        showForm = false;
-                        changeColors(const Color(0xFF6400ab), const Color(0xFFbbd80d));
-                    }
-                  });
-                },
-                items: <String>[
-                  'Seleccione una opción',
-                  'Información',
-                  'Sugerencia',
-                  'Reclamo',
-                ].map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
+              child: AnimatedContainer(
+                width: MediaQuery.of(context).size.width * 0.9,
+                height: 50,
+                duration: const Duration(milliseconds: 250),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [mainColor1, mainColor2],
+                    stops: const [0.2, 0.9],
+                    begin: const Alignment(-2.5, 1),
+                    end: const Alignment(3, 1),
+                  ),
+                  borderRadius: BorderRadius.circular(30), // Hacer el contenedor redondo
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: DropdownButton<String>(
+                  value: requirementDD.isNotEmpty && ['Seleccione una opcion', 'Solicitar informacion', 'Realizar sugerencia', 'Enviar reclamo'].contains(requirementDD)
+                      ? requirementDD
+                      : 'Seleccione una opcion', // Usa un valor válido si el actual no está en la lista
+                  icon: const Icon(Icons.expand_more, color: Colors.white),
+                  iconSize: 24,
+                  elevation: 16,
+                  style: const TextStyle(color: Colors.white),
+                  dropdownColor: Colors.grey,
+                  underline: Container(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      requirementDD = newValue!;
+                      showForm = true;
+                      switch (requirementDD) {
+                        case 'Solicitar informacion':
+                          requirement = requirements?[2].name;
+                          changeColors(const Color(0xFF00c4d5), const Color(0xFF00f56d));
+                          break;
+                        case 'Realizar sugerencia':
+                          requirement = requirements?[1].name;
+                          changeColors(const Color(0xFFcd00d8), const Color(0xFFf9ff00));
+                          break;
+                        case 'Enviar reclamo':
+                          requirement = requirements?[0].name;
+                          changeColors(const Color(0xFFff0000), const Color(0xFFb9d800));
+                          break;
+                        default:
+                          showForm = false;
+                          changeColors(const Color(0xFF6400ab), const Color(0xFFbbd80d));
+                      }
+                    });
+                  },
+                  items: <String>[
+                    'Seleccione una opcion',
+                    'Solicitar informacion',
+                    'Realizar sugerencia',
+                    'Enviar reclamo',
+                  ].map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                ),
+
               ),
             ),
             if (showForm)
               Padding(
-                padding: const EdgeInsets.only(top: 20.0),
+                padding: const EdgeInsets.only(top: 20.0), // Adjust the padding as needed
                 child: buildForm(),
-              ),
+              )
           ],
         ),
       ),
       floatingActionButton: showForm
-          ? FloatingActionButton.extended(
-        onPressed: isSubmitting ? null : submitTicket,
-        label: const Text('Enviar'),
-        icon: const Icon(Icons.send),
-        backgroundColor: mainColor1,
-      )
-          : null,
+          ? AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        width: 150, // Ancho personalizado
+        height: 50, // Altura personalizada
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [mainColor1, mainColor2], // Gradiente dinámico
+            stops: const [0.2, 0.9],
+            begin: const Alignment(-2.5, 1),
+            end: const Alignment(3, 1),
+          ),
+          borderRadius: BorderRadius.circular(30), // Bordes redondeados
+        ),
+        child: Material(
+          color: Colors.transparent, // Evita el color por defecto de Material
+          child: InkWell(
+            borderRadius: BorderRadius.circular(30),
+            onTap: () {
+              submitTicket();
+            },
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Enviar',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+              ],
+            ),
+          ),
+        ),
+      ) : null,
+    );
+  }
+  Material _headerDrawer(BuildContext context) {
+    return Material(
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF6400ab), Color(0xFFbbd80d)],
+            stops: [0.2, 0.9],
+            begin: Alignment(-2.5, 1),
+            end: Alignment(3, 1),
+          ),
+        ),
+        child: FutureBuilder(
+          future: Future.wait([
+            StorageService.getValue('name'),
+            StorageService.getValue('email'),
+            StorageService.getValue('image'),
+          ]),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              final userData = snapshot.data ?? ['', '', ''];
+              final userName = userData[0] ?? 'Usuario';
+              final userEmail = userData[1] ?? 'Correo no disponible';
+              final userImage = userData[2] ?? '';
+
+              return Container(
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 16, // Espaciado dinámico
+                  bottom: 24,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center, // Centra verticalmente
+                  children: [
+                    CircleAvatar(
+                      radius: 35,
+                      backgroundColor: Colors.orange,
+                      backgroundImage: userImage.isNotEmpty
+                          ? NetworkImage(userImage)
+                          : null, // Usa la imagen del usuario si está disponible
+                      child: userImage.isEmpty
+                          ? const Icon(Icons.person, color: Colors.white, size: 35)
+                          : null, // Icono por defecto si no hay imagen
+                    ),
+                    const SizedBox(height: 12), // Espaciado
+                    Text(
+                      userName,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      userEmail,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            } else {
+              return const DrawerHeader(
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+
+  Widget _menuDrawer(BuildContext context) {
+    return Column(
+      children: [
+        ListTile(
+          leading: const Icon(Icons.history),
+          title: const Text('Mis tickets'),
+          onTap: () {
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => const HistorialScreen(),
+            ));
+          },
+        ),
+        const SizedBox(height: 400),
+        const Divider(
+          color: Colors.red,
+        ),
+        ListTile(
+          leading: const Icon(Icons.logout),
+          title: const Text('Cerrar sesión'),
+          onTap: () async {
+            // Mostrar un diálogo de confirmación
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Confirmar cierre de sesión'),
+                content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cancelar'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text('Cerrar sesión'),
+                  ),
+                ],
+              ),
+            );
+
+            if (confirm == true) {
+              // Limpia el almacenamiento y cierra sesión en Google
+              await GoogleService.logOut();
+              await StorageService.clear();
+              // Redirige al usuario a la pantalla de inicio de sesión
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      (route) => false, // Eliminar todas las rutas previas
+                );
+              }
+            }
+          },
+        ),
+      ],
     );
   }
 }
