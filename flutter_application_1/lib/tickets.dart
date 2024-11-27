@@ -39,7 +39,6 @@ class _TicketScreenState extends State<TicketScreen> {
   }
 
   Widget _ticketList() {
-    // Lista de tickets
     int a = 29;
     return ListView(
       children: [
@@ -49,7 +48,7 @@ class _TicketScreenState extends State<TicketScreen> {
               padding: const EdgeInsets.all(10.0),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF6400ab), Color(0xFFbbd80d)],
+                  colors: [Colors.green, Colors.lightGreen],
                   stops: [0.2, 0.9],
                   begin: Alignment(-2.5, 1),
                   end: Alignment(3, 1),
@@ -60,33 +59,68 @@ class _TicketScreenState extends State<TicketScreen> {
                     color: Colors.black.withOpacity(0.1),
                     spreadRadius: 2,
                     blurRadius: 5,
-                    offset: const Offset(0, 3), // sombra hacia abajo
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
-              child: const Column(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Título ',
-                    style: TextStyle(
+                    'Título del ticket $i',
+                    style: const TextStyle(
                       fontSize: 15,
-                      color: Colors.white,
-                      fontWeight:
-                          FontWeight.bold, // Añadido para mejor visibilidad
+                      color: Color(0xFFFFFFFF),
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Text(
-                    'Estado: ',
+                  const SizedBox(height: 5),
+                  const Text(
+                    'Estado: Cualquiera',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.white70, // Usar un blanco más tenue
+                      color: Color(0xFFFFFFFF),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    'Fecha: 2024-11-26',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFFFFFFFF),
                     ),
                   ),
                 ],
               ),
             ),
-            onTap: () {},
-          )
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Detalles del Ticket'),
+                    content: const Text(
+                      'Detalles completos del ticket seleccionado.\n'
+                      'Estado: Cualquiera\nFecha: 2024-11-26',
+                    ),
+                    actions: [
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white, // Color de fondo
+                          foregroundColor: const Color.fromARGB(
+                              255, 0, 0, 0), // Color del texto
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Cierra el diálogo
+                        },
+                        child: const Text('Cerrar'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
       ],
     );
   }

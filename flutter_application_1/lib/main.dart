@@ -3,6 +3,8 @@ import 'process.dart';
 import 'tickets.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -20,6 +22,7 @@ class _HomePageState extends State<HomePage> {
   var categories;
   var requirements;
 
+  @override
   void initState() {
     super.initState();
     categoriesRequest();
@@ -434,7 +437,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: HomePage(),
+      home: const HomePage(),
     );
   }
 }
