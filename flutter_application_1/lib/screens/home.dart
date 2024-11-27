@@ -3,7 +3,9 @@ import 'package:flutter_application_1/services/process.dart';
 import 'package:flutter_application_1/tickets.dart';
 import 'package:flutter_application_1/services/StorageService.dart';
 import 'package:flutter_application_1/screens/Login.dart';
-import 'package:flutter_application_1/screens/historial.dart'; // Importa la nueva pantalla
+import 'package:flutter_application_1/screens/historial.dart';
+
+import '../services/google_services.dart'; // Importa la nueva pantalla
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -294,6 +296,7 @@ class _HomePageState extends State<HomePage> {
               leading: const Icon(Icons.logout),
               title: const Text('Cerrar sesión'),
               onTap: () async {
+                // Mostrar un diálogo de confirmación
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
@@ -313,12 +316,15 @@ class _HomePageState extends State<HomePage> {
                 );
 
                 if (confirm == true) {
+                  // Limpia el almacenamiento y cierra sesión en Google
+                  await GoogleService.logOut();
                   await StorageService.clear();
+                  // Redirige al usuario a la pantalla de inicio de sesión
                   if (context.mounted) {
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(builder: (context) => const LoginScreen()),
-                          (route) => false,
+                          (route) => false, // Eliminar todas las rutas previas
                     );
                   }
                 }
