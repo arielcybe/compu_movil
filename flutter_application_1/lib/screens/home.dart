@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/services/process.dart';
 import 'package:flutter_application_1/tickets.dart';
 import 'package:flutter_application_1/services/StorageService.dart';
-
-import 'Login.dart';
+import 'package:flutter_application_1/screens/Login.dart';
+import 'package:flutter_application_1/screens/historial.dart'; // Importa la nueva pantalla
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -248,49 +248,52 @@ class _HomePageState extends State<HomePage> {
       drawer: Drawer(
         child: ListView(
           children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [mainColor1, mainColor2],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: const Text(
-                'Menú',
-                style: TextStyle(color: Colors.white, fontSize: 24),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.history),
-              title: const Text('Mis Tickets'),
-              onTap: () {
-                if (category.isNotEmpty) {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => TicketScreen(categoryToken: category),
-                  ));
-                } else {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Error'),
-                      content: const Text('Selecciona una categoría para ver los tickets.'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Cerrar'),
-                        ),
-                      ],
+            FutureBuilder(
+              future: Future.wait([
+                StorageService.getValue('name'),
+                StorageService.getValue('email'),
+                StorageService.getValue('image'),
+              ]),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  final userData = snapshot.data ?? ['', '', ''];
+                  final userName = userData[0] ?? 'Usuario';
+                  final userEmail = userData[1] ?? 'Correo no disponible';
+                  final userImage = userData[2] ?? '';
+
+                  return UserAccountsDrawerHeader(
+                    accountName: Text(userName),
+                    accountEmail: Text(userEmail),
+                    currentAccountPicture: userImage.isNotEmpty
+                        ? CircleAvatar(
+                      backgroundImage: NetworkImage(userImage),
+                    )
+                        : const CircleAvatar(child: Icon(Icons.person)),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [mainColor1, mainColor2],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                     ),
                   );
                 }
+                return const DrawerHeader(child: CircularProgressIndicator());
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: const Text('Historial de Tickets'),
+              onTap: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const HistorialScreen(),
+                ));
               },
             ),
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Cerrar sesión'),
               onTap: () async {
-                // Mostrar un diálogo de confirmación antes de cerrar sesión
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
@@ -298,11 +301,11 @@ class _HomePageState extends State<HomePage> {
                     content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
                     actions: [
                       TextButton(
-                        onPressed: () => Navigator.of(context).pop(false), // Cancelar
+                        onPressed: () => Navigator.of(context).pop(false),
                         child: const Text('Cancelar'),
                       ),
                       TextButton(
-                        onPressed: () => Navigator.of(context).pop(true), // Confirmar
+                        onPressed: () => Navigator.of(context).pop(true),
                         child: const Text('Cerrar sesión'),
                       ),
                     ],
@@ -310,21 +313,17 @@ class _HomePageState extends State<HomePage> {
                 );
 
                 if (confirm == true) {
-                  // Borrar datos del usuario
-                  await StorageService.clear(); // Asegúrate de tener esta función implementada en StorageService
-
-                  // Redirigir a la pantalla de inicio de sesión
+                  await StorageService.clear();
                   if (context.mounted) {
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(builder: (context) => const LoginScreen()),
-                          (route) => false, // Eliminar todas las rutas previas
+                          (route) => false,
                     );
                   }
                 }
               },
             ),
-
           ],
         ),
       ),

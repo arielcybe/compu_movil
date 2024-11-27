@@ -16,16 +16,23 @@ class _TicketScreenState extends State<TicketScreen> {
   @override
   void initState() {
     super.initState();
-    fetchTicketsForCategory();
+    fetchTickets();
   }
 
-  Future<void> fetchTicketsForCategory() async {
-    final fetchedTickets = await fetchTicketsFromApi(widget.categoryToken);
-    print('Tickets obtenidos: $fetchedTickets'); // Depuración
-    setState(() {
-      tickets = fetchedTickets;
-    });
+  Future<void> fetchTickets() async {
+    try {
+      final fetchedTickets = await fetchTicketsFromApi(
+        categoryToken: widget.categoryToken,
+      );
+      setState(() {
+        tickets = fetchedTickets;
+      });
+    } catch (e) {
+      print('Error al obtener tickets para la categoría: $e');
+    }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
