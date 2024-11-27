@@ -12,8 +12,6 @@ class _HistorialScreenState extends State<HistorialScreen> {
   String selectedCategory = '';
   List<Category> categories = [];
   List<Ticket> tickets = [];
-  bool isLoadingCategories = false; // Indicador de carga para categorías
-  bool isLoadingTickets = false; // Indicador de carga para tickets
 
   @override
   void initState() {
@@ -22,9 +20,6 @@ class _HistorialScreenState extends State<HistorialScreen> {
   }
 
   Future<void> fetchCategories() async {
-    setState(() {
-      isLoadingCategories = true;
-    });
     try {
       final fetchedCategories = await fetchCategoriesFromApi();
       setState(() {
@@ -32,45 +27,46 @@ class _HistorialScreenState extends State<HistorialScreen> {
       });
     } catch (e) {
       print('Error al cargar categorías: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al cargar las categorías.')),
-      );
-    } finally {
-      setState(() {
-        isLoadingCategories = false;
-      });
     }
   }
 
   Future<void> fetchTickets() async {
     if (selectedCategory.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor selecciona una categoría.')),
-      );
+      print('Error: No se seleccionó una categoría');
       return;
     }
-    setState(() {
-      isLoadingTickets = true;
-    });
     try {
-      final fetchedTickets = await fetchTicketsFromApi(
-        categoryToken: selectedCategory,
-        type: 'ALL', // Puedes ajustar esto según la lógica de tu aplicación
-        status: '',  // Puedes especificar un estado si es necesario
-      );
+      final fetchedTickets = await fetchTicketsFromApi(categoryToken: selectedCategory);
       setState(() {
         tickets = fetchedTickets;
       });
     } catch (e) {
       print('Error al cargar tickets: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al cargar los tickets.')),
-      );
-    } finally {
-      setState(() {
-        isLoadingTickets = false;
-      });
     }
+  }
+
+  void showTicketDetails(Ticket ticket) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Detalles del Ticket'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Asunto: ${ticket.subject}'),
+            Text('Estado: ${ticket.status}'),
+            Text('Detalles: ${ticket.message}'),
+            Text('Fecha: ${ticket.created}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -84,33 +80,28 @@ class _HistorialScreenState extends State<HistorialScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (isLoadingCategories)
-              const Center(child: CircularProgressIndicator())
-            else
-              DropdownButtonFormField<String>(
-                value: selectedCategory.isNotEmpty ? selectedCategory : null,
-                decoration: const InputDecoration(
-                  labelText: 'Selecciona una categoría',
-                  border: OutlineInputBorder(),
-                ),
-                items: categories
-                    .map((category) => DropdownMenuItem(
-                  value: category.token,
-                  child: Text(category.name),
-                ))
-                    .toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedCategory = newValue ?? '';
-                  });
-                  fetchTickets(); // Actualizar tickets al cambiar la categoría
-                },
+            DropdownButtonFormField<String>(
+              value: selectedCategory.isNotEmpty ? selectedCategory : null,
+              decoration: const InputDecoration(
+                labelText: 'Selecciona una categoría',
+                border: OutlineInputBorder(),
               ),
+              items: categories
+                  .map((category) => DropdownMenuItem(
+                value: category.token,
+                child: Text(category.name),
+              ))
+                  .toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  selectedCategory = newValue ?? '';
+                  fetchTickets(); // Actualizar tickets al cambiar la categoría
+                });
+              },
+            ),
             const SizedBox(height: 20),
             Expanded(
-              child: isLoadingTickets
-                  ? const Center(child: CircularProgressIndicator())
-                  : tickets.isEmpty
+              child: tickets.isEmpty
                   ? const Center(
                 child: Text('No hay tickets para mostrar.'),
               )
@@ -118,14 +109,34 @@ class _HistorialScreenState extends State<HistorialScreen> {
                 itemCount: tickets.length,
                 itemBuilder: (context, index) {
                   final ticket = tickets[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    child: ListTile(
-                      title: Text(ticket.subject ?? 'Sin asunto'),
-                      subtitle: Text('Estado: ${ticket.status ?? 'Desconocido'}'),
-                      onTap: () {
-                        // Manejar el toque del ticket si es necesario
-                      },
+                  return GestureDetector(
+                    onTap: () => showTicketDetails(ticket),
+                    child: Card(
+                      color: Colors.green,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Título del ticket: ${ticket.subject}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              'Estado: ${ticket.status}',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            Text(
+                              'Fecha: ${ticket.created}',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   );
                 },
