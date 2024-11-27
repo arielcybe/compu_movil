@@ -1,24 +1,46 @@
 import 'package:flutter/material.dart';
+import 'services/process.dart'; // Asegúrate de importar process.dart correctamente.
 
-class ticketScreen extends StatefulWidget {
-  const ticketScreen({super.key});
+class TicketScreen extends StatefulWidget {
+  final String categoryToken;
+
+  const TicketScreen({required this.categoryToken, super.key});
 
   @override
-  State<ticketScreen> createState() => _ticketScreenState();
+  State<TicketScreen> createState() => _TicketScreenState();
 }
 
-class _ticketScreenState extends State<ticketScreen> {
+class _TicketScreenState extends State<TicketScreen> {
+  List<dynamic> tickets = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchTickets();
+  }
+
+  Future<void> fetchTickets() async {
+    try {
+      final fetchedTickets = await fetchTicketsFromApi(
+        categoryToken: widget.categoryToken,
+      );
+      setState(() {
+        tickets = fetchedTickets;
+      });
+    } catch (e) {
+      print('Error al obtener tickets para la categoría: $e');
+    }
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tickets', style: TextStyle(color: Colors.white)),
-        iconTheme: const IconThemeData(
-          color: Colors.white, // Cambia el color del ícono aquí
-        ),
-        flexibleSpace: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          decoration: const BoxDecoration(
+        flexibleSpace: const DecoratedBox(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [Color(0xFF6400ab), Color(0xFFbbd80d)],
               stops: [0.2, 0.9],
@@ -26,68 +48,25 @@ class _ticketScreenState extends State<ticketScreen> {
               end: Alignment(3, 1),
             ),
           ),
-          width: 200,
-          height: 200,
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(child: _ticketList()),
-        ],
+      body: tickets.isEmpty
+          ? const Center(
+        child: Text('No hay tickets disponibles para esta categoría'),
+      )
+          : ListView.builder(
+        itemCount: tickets.length,
+        itemBuilder: (context, index) {
+          final ticket = tickets[index];
+          return ListTile(
+            title: Text(ticket['title'] ?? 'Título no disponible'),
+            subtitle: Text('Estado: ${ticket['status'] ?? 'Sin estado'}'),
+            onTap: () {
+              // Acción al tocar un ticket.
+            },
+          );
+        },
       ),
-    );
-  }
-
-  Widget _ticketList() {
-    // Lista de tickets
-    int a = 29;
-    return ListView(
-      children: [
-        for (int i = 1; i < a; i++)
-          ListTile(
-            title: Container(
-              padding: const EdgeInsets.all(10.0),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6400ab), Color(0xFFbbd80d)],
-                  stops: [0.2, 0.9],
-                  begin: Alignment(-2.5, 1),
-                  end: Alignment(3, 1),
-                ),
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    spreadRadius: 2,
-                    blurRadius: 5,
-                    offset: const Offset(0, 3), // sombra hacia abajo
-                  ),
-                ],
-              ),
-              child: const Column(
-                children: [
-                  Text(
-                    'Título ',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.white,
-                      fontWeight:
-                          FontWeight.bold, // Añadido para mejor visibilidad
-                    ),
-                  ),
-                  Text(
-                    'Estado: ',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white70, // Usar un blanco más tenue
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            onTap: () {},
-          )
-      ],
     );
   }
 }
