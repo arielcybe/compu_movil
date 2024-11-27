@@ -73,32 +73,93 @@ class _HistorialScreenState extends State<HistorialScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Historial de Tickets'),
+        title: const Text('Mis tickets', style: TextStyle(color: Colors.white)),
+        iconTheme: const IconThemeData(
+          color: Colors.white, // Cambia el color del ícono aquí
+        ),
+        flexibleSpace: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6400ab), Color(0xFFbbd80d)],
+              stops: [0.2, 0.9],
+              begin: Alignment(-2.5, 1),
+              end: Alignment(3, 1),
+            ),
+          ),
+          width: 200,
+          height: 200,
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DropdownButtonFormField<String>(
-              value: selectedCategory.isNotEmpty ? selectedCategory : null,
-              decoration: const InputDecoration(
-                labelText: 'Selecciona una categoría',
-                border: OutlineInputBorder(),
+            Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6400ab), Color(0xFFbbd80d)],
+                  stops: [0.2, 0.9],
+                  begin: Alignment(-2.5, 1),
+                  end: Alignment(3, 1),
+                ),
+                borderRadius: BorderRadius.circular(30), // Bordes redondeados
               ),
-              items: categories
-                  .map((category) => DropdownMenuItem(
-                value: category.token,
-                child: Text(category.name),
-              ))
-                  .toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  selectedCategory = newValue ?? '';
-                  fetchTickets(); // Actualizar tickets al cambiar la categoría
-                });
-              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                child: DropdownButtonFormField<String>(
+                  value: selectedCategory.isNotEmpty ? selectedCategory : "",
+                  dropdownColor: Colors.grey,// Fondo blanco del menú desplegable
+                  iconEnabledColor: Colors.white, // Ícono blanco
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal,
+                  ),
+                  items: [
+                    const DropdownMenuItem<String>(
+                      value: "", // Opción predeterminada
+                      child: Text(
+                        'Categoría',
+                        style: TextStyle(
+                          color: Colors.white, // Texto blanco para la opción predeterminada
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                    ...categories.map<DropdownMenuItem<String>>((Category category) {
+                      return DropdownMenuItem<String>(
+                        value: category.token, // Asigna el token como valor
+                        child: Text(
+                          category.name, // Muestra el nombre de la categoría
+                          style: const TextStyle(
+                            color: Colors.white, // Texto blanco en las opciones desplegadas
+                            fontSize: 16,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ],
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedCategory = newValue ?? '';
+                      fetchTickets(); // Actualizar tickets al cambiar la categoría
+                    });
+                  },
+                  decoration: const InputDecoration(
+                    enabledBorder: InputBorder.none, // Sin borde
+                    focusedBorder: InputBorder.none, // Sin borde al enfocar
+                    filled: true,
+                    fillColor: Colors.transparent, // Fondo transparente para mostrar el gradiente
+                    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  ),
+                ),
+              ),
             ),
+
             const SizedBox(height: 20),
             Expanded(
               child: tickets.isEmpty
@@ -111,16 +172,32 @@ class _HistorialScreenState extends State<HistorialScreen> {
                   final ticket = tickets[index];
                   return GestureDetector(
                     onTap: () => showTicketDetails(ticket),
-                    child: Card(
-                      color: Colors.green,
-                      margin: const EdgeInsets.symmetric(vertical: 8),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 8), // Espaciado entre tarjetas
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF6400ab), Color(0xFFbbd80d)],
+                          stops: [0.2, 0.9],
+                          begin: Alignment(-2.5, 1),
+                          end: Alignment(3, 1),
+                        ),
+                        borderRadius: BorderRadius.circular(10), // Bordes redondeados
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            spreadRadius: 2,
+                            blurRadius: 5,
+                            offset: const Offset(0, 3), // Sombra hacia abajo
+                          ),
+                        ],
+                      ),
                       child: Padding(
-                        padding: const EdgeInsets.all(16.0),
+                        padding: const EdgeInsets.all(16.0), // Margen interno de la tarjeta
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Título del ticket: ${ticket.subject}',
+                              'Título: ${ticket.subject}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -128,10 +205,6 @@ class _HistorialScreenState extends State<HistorialScreen> {
                             ),
                             Text(
                               'Estado: ${ticket.status}',
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            Text(
-                              'Fecha: ${ticket.created}',
                               style: const TextStyle(color: Colors.white),
                             ),
                           ],
