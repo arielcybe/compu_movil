@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/process.dart';
+import 'package:intl/intl.dart';
+
 
 class HistorialScreen extends StatefulWidget {
   const HistorialScreen({super.key});
@@ -45,21 +47,71 @@ class _HistorialScreenState extends State<HistorialScreen> {
     }
   }
 
+  Future<void> deleteTickets() async {
+    if (selectedCategory.isEmpty) {
+      print('Error: No se seleccionó una categoría');
+      return;
+    }
+    try {
+      final fetchedTickets = await fetchTicketsFromApi(categoryToken: selectedCategory);
+      setState(() {
+        tickets = fetchedTickets;
+      });
+    } catch (e) {
+      print('Error al cargar tickets: $e');
+    }
+  }
+
   void showTicketDetails(Ticket ticket) {
+    // Convertir la fecha String a DateTime
+    DateTime createdDate = DateTime.parse(ticket.created);
+
+    // Formatear la fecha (día, mes y año)
+    String formattedDate = DateFormat('dd/MM/yyyy').format(createdDate);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Detalles del Ticket'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Asunto: ${ticket.subject}'),
-            Text('Estado: ${ticket.status}'),
-            Text('Detalles: ${ticket.message}'),
-            Text('Fecha: ${ticket.created}'),
-          ],
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.8,  // 80% del ancho de la pantalla
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Asunto: ${ticket.subject}'),
+              Text(ticket.status == 'RECEIVED' ? 'Estado: Recibido'
+                  : ticket.status == 'ERROR' ? 'Estado: Error'
+                  : ticket.status == 'UNDER_REVIEW' ? 'Estado: En revision'
+                  : ticket.status == 'IN_PROGRESS' ? 'Estado: En progreso'
+                  : ticket.status == 'PENDING_INFORMATION' ? 'Estado: Informacion insuficiente'
+                  : ticket.status == 'RESOLVED' ? 'Estado: Resuelto'
+                  : ticket.status == 'CLOSED' ? 'Estado: Cerrado'
+                  : ticket.status == 'REJECTED' ? 'Estado: Rechazado'
+                  : ticket.status == 'CANCELLED' ? 'Estado: Cancelado'
+                  : '',),
+              Text('Detalles: ${ticket.message}'),
+              Text('Fecha: $formattedDate'),
+            ],
+          ),
         ),
         actions: [
+          if (ticket.status == 'RESOLVED') ...[
+            TextButton(
+              onPressed: () {},
+              child: const Text('Rechazar solución'),
+            ),
+            TextButton(
+              onPressed: () {},
+              child: const Text('Aceptar solución'),
+            ),
+          ],
+          if (ticket.status != 'CANCELLED') ...[
+            TextButton(
+              onPressed: () {},
+              child: const Text('Cancelar solicitud'),
+            ),
+          ],
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Cerrar'),
@@ -175,11 +227,14 @@ class _HistorialScreenState extends State<HistorialScreen> {
                     child: Container(
                       margin: const EdgeInsets.symmetric(vertical: 8), // Espaciado entre tarjetas
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF6400ab), Color(0xFFbbd80d)],
-                          stops: [0.2, 0.9],
-                          begin: Alignment(-2.5, 1),
-                          end: Alignment(3, 1),
+                        gradient: LinearGradient(
+                          colors: ticket.type == 'INFORMATION' ? [const Color(0xFF00c4d5), const Color(0xFF00f56d)]
+                              : ticket.type == 'SUGGESTION' ? [const Color(0xFFcd00d8), const Color(0xFFf9ff00)]
+                              : ticket.type == 'CLAIM' ? [const Color(0xFFff0000), const Color(0xFFb9d800)]
+                              : [Colors.grey, Colors.grey],
+                          stops: const [0.2, 0.9],
+                          begin: const Alignment(-2.5, 1),
+                          end: const Alignment(3, 1),
                         ),
                         borderRadius: BorderRadius.circular(10), // Bordes redondeados
                         boxShadow: [
@@ -204,7 +259,16 @@ class _HistorialScreenState extends State<HistorialScreen> {
                               ),
                             ),
                             Text(
-                              'Estado: ${ticket.status}',
+                              ticket.status == 'RECEIVED' ? 'Estado: Recibido'
+                                  : ticket.status == 'ERROR' ? 'Estado: Error'
+                                  : ticket.status == 'UNDER_REVIEW' ? 'Estado: En revision'
+                                  : ticket.status == 'IN_PROGRESS' ? 'Estado: En progreso'
+                                  : ticket.status == 'PENDING_INFORMATION' ? 'Estado: Informacion insuficiente'
+                                  : ticket.status == 'RESOLVED' ? 'Estado: Resuelto'
+                                  : ticket.status == 'CLOSED' ? 'Estado: Cerrado'
+                                  : ticket.status == 'REJECTED' ? 'Estado: Rechazado'
+                                  : ticket.status == 'CANCELLED' ? 'Estado: Cancelado'
+                                  : '',
                               style: const TextStyle(color: Colors.white),
                             ),
                           ],
