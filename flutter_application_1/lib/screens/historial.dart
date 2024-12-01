@@ -28,7 +28,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
         categories = fetchedCategories;
       });
     } catch (e) {
-      print('Error al cargar categorías: $e');
+      print('Error al cargar categoría: $e');
     }
   }
 
@@ -43,7 +43,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
         tickets = fetchedTickets;
       });
     } catch (e) {
-      print('Error al cargar tickets: $e');
+      print('Error al cargar ticket: $e');
     }
   }
 
@@ -58,68 +58,111 @@ class _HistorialScreenState extends State<HistorialScreen> {
         tickets = fetchedTickets;
       });
     } catch (e) {
-      print('Error al cargar tickets: $e');
+      print('Error al cargar ticket: $e');
     }
   }
 
-  void showTicketDetails(Ticket ticket) {
-    // Convertir la fecha String a DateTime
-    DateTime createdDate = DateTime.parse(ticket.created);
+void showTicketDetails(Ticket ticket) {
+  DateTime createdDate = DateTime.parse(ticket.created);
+  String formattedDate = DateFormat('dd/MM/yyyy').format(createdDate);
 
-    // Formatear la fecha (día, mes y año)
-    String formattedDate = DateFormat('dd/MM/yyyy').format(createdDate);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Detalles del Ticket'),
-        content: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.8,  // 80% del ancho de la pantalla
+  showDialog(
+    context: context,
+    builder: (context) => Dialog(
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: ticket.type == 'INFORMATION' ? [const Color(0xFF00c4d5), const Color(0xFF00f56d)]
+                : ticket.type == 'SUGGESTION' ? [const Color(0xFFcd00d8), const Color(0xFFf9ff00)]
+                : ticket.type == 'CLAIM' ? [const Color(0xFFff0000), const Color(0xFFb9d800)]
+                : [Colors.grey, Colors.grey],
+            stops: const [0.2, 0.9],
+            begin: const Alignment(-2.5, 1),
+            end: const Alignment(3, 1),
+          ),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Asunto: ${ticket.subject}'),
-              Text(ticket.status == 'RECEIVED' ? 'Estado: Recibido'
-                  : ticket.status == 'ERROR' ? 'Estado: Error'
-                  : ticket.status == 'UNDER_REVIEW' ? 'Estado: En revision'
-                  : ticket.status == 'IN_PROGRESS' ? 'Estado: En progreso'
-                  : ticket.status == 'PENDING_INFORMATION' ? 'Estado: Informacion insuficiente'
-                  : ticket.status == 'RESOLVED' ? 'Estado: Resuelto'
-                  : ticket.status == 'CLOSED' ? 'Estado: Cerrado'
-                  : ticket.status == 'REJECTED' ? 'Estado: Rechazado'
-                  : ticket.status == 'CANCELLED' ? 'Estado: Cancelado'
-                  : '',),
-              Text('Detalles: ${ticket.message}'),
-              Text('Fecha: $formattedDate'),
+              const Text(
+                'Detalles del Ticket',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Asunto: ${ticket.subject}',
+                style: const TextStyle(color: Colors.white),
+              ),
+              Text(
+                ticket.status == 'RECEIVED'
+                    ? 'Estado: Recibido'
+                    : ticket.status == 'ERROR'
+                        ? 'Estado: Error'
+                        : ticket.status == 'UNDER_REVIEW'
+                            ? 'Estado: En revisión'
+                            : ticket.status == 'IN_PROGRESS'
+                                ? 'Estado: En progreso'
+                                : ticket.status == 'PENDING_INFORMATION'
+                                    ? 'Estado: Información insuficiente'
+                                    : ticket.status == 'RESOLVED'
+                                        ? 'Estado: Resuelto'
+                                        : ticket.status == 'CLOSED'
+                                            ? 'Estado: Cerrado'
+                                            : ticket.status == 'REJECTED'
+                                                ? 'Estado: Rechazado'
+                                                : ticket.status == 'CANCELLED'
+                                                    ? 'Estado: Cancelado'
+                                                    : '',
+                style: const TextStyle(color: Colors.white),
+              ),
+              Text(
+                'Detalles: ${ticket.message}',
+                style: const TextStyle(color: Colors.white),
+              ),
+              Text(
+                'Fecha: $formattedDate',
+                style: const TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (ticket.status == 'RESOLVED') ...[
+                    TextButton(
+                      onPressed: () {},
+                      child: const Text('Rechazar solución', style: TextStyle(color: Colors.white)),
+                    ),
+                    TextButton(
+                      onPressed: () {},
+                      child: const Text('Aceptar solución', style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                  if (ticket.status != 'CANCELLED')
+                    TextButton(
+                      onPressed: () {},
+                      child: const Text('Cancelar solicitud', style: TextStyle(color: Colors.white)),
+                    ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cerrar', style: TextStyle(color: Colors.white)),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
-        actions: [
-          if (ticket.status == 'RESOLVED') ...[
-            TextButton(
-              onPressed: () {},
-              child: const Text('Rechazar solución'),
-            ),
-            TextButton(
-              onPressed: () {},
-              child: const Text('Aceptar solución'),
-            ),
-          ],
-          if (ticket.status != 'CANCELLED') ...[
-            TextButton(
-              onPressed: () {},
-              child: const Text('Cancelar solicitud'),
-            ),
-          ],
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cerrar'),
-          ),
-        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {

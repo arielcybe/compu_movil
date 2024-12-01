@@ -1,9 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/services/process.dart';
-import 'package:flutter_application_1/tickets.dart';
 import 'package:flutter_application_1/services/StorageService.dart';
 import 'package:flutter_application_1/screens/Login.dart';
 import 'package:flutter_application_1/screens/historial.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../services/google_services.dart'; // Importa la nueva pantalla
 
@@ -27,6 +28,9 @@ class _HomePageState extends State<HomePage> {
   var requirements;
   Color mainColor1 = const Color(0xFF6400ab);
   Color mainColor2 = const Color(0xFFbbd80d);
+  late File file;
+  late String ticketToken;
+
 
   @override
   void initState() {
@@ -75,13 +79,15 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      await createTicket(
+       ticketToken = (await createTicket(
         categoryToken: category,
         type: requirement,
         subject: title,
         message: details,
-      );
-
+      ))!;
+      if (file != null) {
+        await attachFile(ticketToken: ticketToken, file: file);
+      }
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -134,34 +140,34 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget buildForm() {
-    return Container(
-      padding: const EdgeInsets.all(20.0),
-      width: MediaQuery.of(context).size.width * 0.9,
-      decoration: BoxDecoration(
-        color: const Color(0xFFd3d3d3),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Column(
-        children: [
-          TextFormField(
-            decoration: InputDecoration(
-              labelText: 'Título',
-              filled: true,
-              labelStyle: const TextStyle(
-                color: Colors.grey,
-                fontSize: 16,
-              ),
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+  return Container(
+    padding: const EdgeInsets.all(20.0),
+    width: MediaQuery.of(context).size.width * 0.9,
+    decoration: BoxDecoration(
+      color: const Color(0xFFd3d3d3),
+      borderRadius: BorderRadius.circular(15),
+    ),
+    child: Column(
+      children: [
+        TextFormField(
+          decoration: InputDecoration(
+            labelText: 'Título',
+            filled: true,
+            labelStyle: const TextStyle(
+              color: Colors.grey,
+              fontSize: 16,
             ),
-            onChanged: (value) => setState(() {
-              title = value;
-            }),
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           ),
+          onChanged: (value) => setState(() {
+            title = value;
+          }),
+        ),
           const SizedBox(height: 10),
           DropdownButtonFormField<String>(
             value: categories.contains(categoryDD) ? categoryDD : "", // Usa null si no coincide
@@ -210,30 +216,57 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 10),
           TextFormField(
-            maxLines: 5,
-            decoration: InputDecoration(
-              labelText: 'Detalles',
-              filled: true,
-              labelStyle: const TextStyle(
-                color: Colors.grey,
-                fontSize: 16,
-              ),
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              alignLabelWithHint: true,
+          maxLines: 5,
+          decoration: InputDecoration(
+            labelText: 'Detalles',
+            filled: true,
+            labelStyle: const TextStyle(
+              color: Colors.grey,
+              fontSize: 16,
             ),
-            onChanged: (value) => setState(() {
-              details = value;
-            }),
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            alignLabelWithHint: true,
           ),
-        ],
-      ),
-    );
+          onChanged: (value) => setState(() {
+            details = value;
+          }),
+        ),
+        const SizedBox(height: 10),
+        ElevatedButton.icon(
+          onPressed: selectFile,
+          icon: const Icon(Icons.attach_file),
+          label: const Text('Adjuntar archivo'),
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.grey, // Aquí defines el color del texto
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<void> selectFile() async {
+  final result = await FilePicker.platform.pickFiles(
+    type: FileType.custom,
+    allowedExtensions: ['png', 'jpg', 'pdf'],
+  );
+
+  if (result != null && result.files.single.path != null) {
+    file = File(result.files.single.path!);
+    print('Archivo seleccionado: ${file.path}');
+  } else {
+    print('No se seleccionó ningún archivo.');
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -473,8 +506,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
   Widget _menuDrawer(BuildContext context) {
+    double screenHeight = MediaQuery.of(context).size.height;
     return Column(
       children: [
         ListTile(
@@ -486,7 +519,7 @@ class _HomePageState extends State<HomePage> {
             ));
           },
         ),
-        const SizedBox(height: 400),
+        SizedBox(height: screenHeight * 0.6),
         const Divider(
           color: Colors.red,
         ),
@@ -494,7 +527,6 @@ class _HomePageState extends State<HomePage> {
           leading: const Icon(Icons.logout),
           title: const Text('Cerrar sesión'),
           onTap: () async {
-            // Mostrar un diálogo de confirmación
             final confirm = await showDialog<bool>(
               context: context,
               builder: (context) => AlertDialog(
